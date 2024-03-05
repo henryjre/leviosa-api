@@ -1,0 +1,19 @@
+// Bring in our dependencies
+import express from "express";
+import helmet from "helmet";
+import "dotenv/config";
+
+const app = express();
+const PORT = process.env.PORT || 3000;
+
+import routes from "./routes/index-routes.js";
+
+app.use(helmet());
+app.use(express.json());
+
+app.use("/api", routes);
+
+// Turn on that server!
+app.listen(PORT, () => {
+  console.log(`App listening on port ${PORT}`);
+});
