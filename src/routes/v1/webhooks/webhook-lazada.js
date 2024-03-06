@@ -5,7 +5,8 @@ import crypto from "crypto";
 export async function catchWebhook(req, res) {
   res.status(200).json({ ok: true, message: "success" });
   try {
-    const idParams = req.query.id;
+    const body = req.body;
+    const auth = req.headers.authorization;
 
     if (!idParams) {
       return res.status(400).json({ result: "No SKU found" });

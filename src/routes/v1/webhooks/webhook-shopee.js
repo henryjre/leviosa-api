@@ -28,7 +28,7 @@ export async function catchWebhook(req, res) {
 
       const receivedSignature = req.get("Authorization");
       const url =
-        "https://jellyfish-app-yevob.ondigitalocean.app//api/v1/webhooks/shopee";
+        "https://jellyfish-app-yevob.ondigitalocean.app/api/v1/webhooks/shopee";
       const responseContent = JSON.stringify(req.body);
       const partnerKey = secrets.APP_KEY;
       const sign = signWebhookRequest(url, responseContent, partnerKey);
