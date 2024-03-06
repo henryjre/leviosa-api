@@ -10,6 +10,7 @@ import {
 } from "../../../functions/inventory.js";
 
 export async function catchWebhook(req, res) {
+  return res.status(200).json({ ok: true, message: "success" });
   const secretId = process.env.shopee_secrets_id;
 
   try {
@@ -34,6 +35,7 @@ export async function catchWebhook(req, res) {
       const sign = signWebhookRequest(url, responseContent, partnerKey);
 
       if (sign !== receivedSignature) {
+        console.log("Shopee signature mismatch!");
         await res.status(401).json({ ok: false, message: "unauthorized" });
         return;
       }
