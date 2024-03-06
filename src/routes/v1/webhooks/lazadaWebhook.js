@@ -2,16 +2,16 @@ import pools from "../../../sqlPools.js";
 
 export async function queryTest(req, res) {
   try {
-    const idParams = req.query.sku;
+    const idParams = req.query.id;
 
     if (!idParams) {
       return res.status(400).json({ result: "No SKU found" });
     }
 
-    const connection = await pools.leviosaPool.getConnection();
+    const connection = await pools.managementPool.getConnection();
 
     try {
-      const query = "SELECT * FROM Leviosa_Inventory WHERE SKU = ?";
+      const query = "SELECT * FROM Executives WHERE MEMBER_ID = ?";
       const [product] = await connection.query(query, [idParams]);
 
       if (product.length > 0) {
