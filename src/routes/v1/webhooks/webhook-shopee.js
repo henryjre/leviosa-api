@@ -116,7 +116,7 @@ export async function catchWebhook(req, res) {
             Number(totalReceivables.toFixed(2)),
           ]);
 
-          await decrementInventory(connection, lineItems.products);
+          //   await decrementInventory(connection, lineItems.products);
         } else if (status === "CANCELLED") {
           const selectOrderQuery =
             "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
@@ -207,7 +207,7 @@ export async function catchWebhook(req, res) {
                 newCost: totalNewCost,
               });
             }
-            await incrementInventoryAndCost(connection, toUpdate);
+            // await incrementInventoryAndCost(connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderData.order_sn]);
