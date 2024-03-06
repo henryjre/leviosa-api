@@ -27,4 +27,6 @@ const managementPool = createPool("management");
 const leviosaPool = createPool("defaultdb");
 const inventoryPool = createPool("inventory");
 
-export default { managementPool, leviosaPool, inventoryPool };
+const pools = { managementPool, leviosaPool, inventoryPool };
+
+export default pools;

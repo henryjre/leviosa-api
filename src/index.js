@@ -17,3 +17,9 @@ app.use("/api", routes);
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
+
+// import refresh from "./secrets/refreshSecrets.js";
+
+// refresh.shopeeSecrets.start();
+// refresh.tiktokSecrets.start();
+// refresh.lazadaSecrets.start();

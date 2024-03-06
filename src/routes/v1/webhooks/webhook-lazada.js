@@ -1,6 +1,9 @@
 import pools from "../../../sqlPools.js";
+import fetch from "node-fetch";
+import crypto from "crypto";
 
-export async function queryTest(req, res) {
+export async function catchWebhook(req, res) {
+  res.status(200).json({ ok: true, message: "success" });
   try {
     const idParams = req.query.id;
 
