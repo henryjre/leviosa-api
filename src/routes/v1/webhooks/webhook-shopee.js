@@ -131,6 +131,13 @@ export async function catchWebhook(req, res) {
             return;
           }
 
+          if (["RTS", "CANCELLED"].includes(order[0].ORDER_STATUS)) {
+            console.log(
+              `Cancelled Shopee order #${orderId} is already recorded. Ignoring...`
+            );
+            return;
+          }
+
           const orderFetch = await getOrderDetail(secrets, orderId);
           if (!orderFetch.ok) {
             return;

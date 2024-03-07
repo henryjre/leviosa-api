@@ -31,3 +31,10 @@ export async function catchWebhook(req, res) {
     return res.status(500).json({ result: "Internal Server Error" });
   }
 }
+
+function signWebhookRequest(input, secret) {
+  const hmac = crypto.createHmac("sha256", secret);
+  hmac.update(input);
+
+  return hmac.digest("hex");
+}
