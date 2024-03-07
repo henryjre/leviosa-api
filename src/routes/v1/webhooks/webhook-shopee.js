@@ -13,18 +13,20 @@ export async function catchWebhook(req, res) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const connection = await pools.leviosaPool.getConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
     const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
-      const queryShopee = "SELECT * FROM Shop_Tokens WHERE ID = ?";
-      const [shopeeSecrets] = await connection.query(queryShopee, [secretId]);
+      const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
+      const [secretsResult] = await def_connection.query(querySecrets, [
+        secretId,
+      ]);
 
-      if (shopeeSecrets.length <= 0) {
+      if (secretsResult.length <= 0) {
         throw new Error("No secrets found.");
       }
 
-      const secrets = shopeeSecrets[0];
+      const secrets = secretsResult[0];
 
       const receivedSignature = req.get("Authorization");
       const url =
@@ -34,12 +36,10 @@ export async function catchWebhook(req, res) {
       const sign = signWebhookRequest(url, responseContent, partnerKey);
 
       if (sign !== receivedSignature) {
-        console.log("Shopee signature mismatch!");
-        await res.status(401).json({ ok: false, message: "unauthorized" });
-        return;
+        throw new Error("Shopee signature mismatch!");
       }
 
-      await res.status(200).json({ ok: true, message: "success" });
+      res.status(200).json({ ok: true, message: "success" });
 
       const body = req.body;
       switch (body.code) {
@@ -57,6 +57,7 @@ export async function catchWebhook(req, res) {
         if (status === "UNPAID") {
           const orderFetch = await getOrderDetail(secrets, orderId);
           if (!orderFetch.ok) {
+            console.log(orderFetch);
             return;
           }
 
@@ -79,7 +80,10 @@ export async function catchWebhook(req, res) {
             .tz("Asia/Manila")
             .format("YYYY-MM-DD HH:mm:ss");
 
-          const lineItems = await queryProductsPlacement(connection, skuArray);
+          const lineItems = await queryProductsPlacement(
+            def_connection,
+            skuArray
+          );
 
           const splittedProducts = lineItems.products.flatMap((product) => {
             return Array.from({ length: product.quantity }, () => ({
@@ -116,7 +120,7 @@ export async function catchWebhook(req, res) {
             Number(totalReceivables.toFixed(2)),
           ]);
 
-          //   await decrementInventory(connection, lineItems.products);
+          //   await decrementInventory(def_connection, lineItems.products);
         } else if (status === "CANCELLED") {
           const selectOrderQuery =
             "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
@@ -140,6 +144,7 @@ export async function catchWebhook(req, res) {
 
           const orderFetch = await getOrderDetail(secrets, orderId);
           if (!orderFetch.ok) {
+            console.log(orderFetch);
             return;
           }
 
@@ -189,7 +194,10 @@ export async function catchWebhook(req, res) {
                 cost: product.PRODUCT_COGS,
               };
             });
-            const lineItems = await queryProductsCancel(connection, skuArray);
+            const lineItems = await queryProductsCancel(
+              def_connection,
+              skuArray
+            );
 
             const toUpdate = [];
             for (const product of skuArray) {
@@ -214,7 +222,7 @@ export async function catchWebhook(req, res) {
                 newCost: totalNewCost,
               });
             }
-            // await incrementInventoryAndCost(connection, toUpdate);
+            // await incrementInventoryAndCost(def_connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderData.order_sn]);
@@ -223,15 +231,14 @@ export async function catchWebhook(req, res) {
             "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
           await inv_connection.query(updateQuery, [status, orderId]);
         }
-
-        return;
       }
     } finally {
-      connection.release();
+      def_connection.release();
       inv_connection.release();
     }
   } catch (error) {
-    console.log(error);
+    console.log(error.toString());
+    return res.status(401).json({ ok: false, message: "unauthorized" });
   }
 }
 
