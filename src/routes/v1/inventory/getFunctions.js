@@ -1,18 +1,52 @@
 import moment from "moment-timezone";
 import pools from "../../../sqlPools.js";
 
-export async function getPendingInventoryOut(req, res) {
-  const { start_date, end_date, platform } = req.query;
+export async function getInventoryProductOrders(req, res) {
+  const { start_date, end_date, platform, status } = req.query;
 
   try {
     if (!start_date || !end_date || !platform) {
       throw new Error("Invalid parameters");
     }
 
+    if (
+      ![
+        "PENDING IN",
+        "PENDING OUT",
+        "COMPLETED IN",
+        "COMPLETED OUT",
+        "CANCELLED",
+      ].includes(status)
+    ) {
+      throw new Error("Invalid status");
+    }
+
     const inv_connection = await pools.inventoryPool.getConnection();
 
+    let table;
+    switch (status) {
+      case "PENDING IN":
+        table = "Pending_Inventory_In";
+        break;
+      case "PENDING OUT":
+        table = "Pending_Inventory_Out";
+        break;
+      case "COMPLETED IN":
+        table = "Completed_Inventory_In";
+        break;
+      case "COMPLETED OUT":
+        table = "Completed_Inventory_Out";
+        break;
+      case "CANCELLED":
+        table = "Cancelled_Inventory_Out";
+        break;
+
+      default:
+        break;
+    }
+
     try {
-      const selectQuery = `SELECT * FROM Pending_Inventory_Out WHERE ORDER_CREATED BETWEEN ? AND ? AND PLATFORM = ? ORDER BY ORDER_CREATED ASC;`;
+      const selectQuery = `SELECT * FROM ${table} WHERE ORDER_CREATED BETWEEN ? AND ? AND PLATFORM = ? ORDER BY ORDER_CREATED ASC;`;
       const [selectResult] = await inv_connection.query(selectQuery, [
         start_date,
         end_date,
