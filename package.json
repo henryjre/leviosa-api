@@ -1,0 +1,31 @@
+{
+  "name": "leviosa-api",
+  "version": "1.0.0",
+  "description": "The official API for Leviosa Philippines",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "test": "node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/henryjre/leviosa-api.git"
+  },
+  "author": "Henry Pineda",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/henryjre/leviosa-api/issues"
+  },
+  "homepage": "https://github.com/henryjre/leviosa-api#readme",
+  "dependencies": {
+    "cron": "^3.1.6",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.3",
+    "helmet": "^7.1.0",
+    "moment": "^2.30.1",
+    "moment-timezone": "^0.5.45",
+    "mysql2": "^3.9.2",
+    "nanoid": "^5.0.6",
+    "node-fetch": "^3.3.2"
+  }
+}
