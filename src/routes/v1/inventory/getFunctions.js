@@ -85,7 +85,7 @@ export async function getInventoryProductOrders(req, res) {
   }
 }
 
-export async function getRetailOrders() {
+export async function getRetailOrders(req, res) {
   const { start_date, end_date, platform } = req.query;
 
   try {
