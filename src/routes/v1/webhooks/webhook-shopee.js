@@ -38,9 +38,9 @@ export async function catchWebhook(req, res) {
       const partnerKey = secrets.APP_KEY;
       const sign = signWebhookRequest(url, responseContent, partnerKey);
 
-      // if (sign !== receivedSignature) {
-      //   throw new Error("Shopee signature mismatch!");
-      // }
+      if (sign !== receivedSignature) {
+        throw new Error("Shopee signature mismatch!");
+      }
 
       res.status(200).json({ ok: true, message: "success" });
 
@@ -95,6 +95,7 @@ export async function catchWebhook(req, res) {
 
           const pendingItems = [];
           let counter = 1;
+          let totalCost = 0;
 
           for (const item of splittedProducts) {
             const uniqueId = `SHOPEE_${orderData.order_sn}_${counter}`;
@@ -107,6 +108,7 @@ export async function catchWebhook(req, res) {
               "SHOPEE",
               parseFloat(item.cost),
             ]);
+            totalCost += parseFloat(item.cost);
             counter++;
           }
 
@@ -115,11 +117,12 @@ export async function catchWebhook(req, res) {
           await inv_connection.query(insertPending, [pendingItems]);
 
           const insertOrder =
-            "INSERT IGNORE INTO Orders_Shopee (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, CREATED_DATE) VALUES (?, ?, ?, ?)";
+            "INSERT IGNORE INTO Orders_Shopee (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
           await inv_connection.query(insertOrder, [
             orderData.order_sn,
             status,
             Number(totalReceivables.toFixed(2)),
+            totalCost,
             orderCreatedDate,
           ]);
 

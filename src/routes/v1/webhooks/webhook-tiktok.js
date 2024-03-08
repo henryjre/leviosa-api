@@ -97,6 +97,7 @@ export async function catchWebhook(req, res) {
 
           const pendingItems = [];
           let counter = 1;
+          let totalCost = 0;
 
           for (const item of splittedProducts) {
             const uniqueId = `TIKTOK_${orderId}_${counter}`;
@@ -109,6 +110,7 @@ export async function catchWebhook(req, res) {
               "TIKTOK",
               parseFloat(item.cost),
             ]);
+            totalCost += parseFloat(item.cost);
             counter++;
           }
 
@@ -117,11 +119,12 @@ export async function catchWebhook(req, res) {
           await inv_connection.query(insertPending, [pendingItems]);
 
           const insertOrder =
-            "INSERT IGNORE INTO Orders_Tiktok (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, CREATED_DATE) VALUES (?, ?, ?, ?)";
+            "INSERT IGNORE INTO Orders_Tiktok (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
           await inv_connection.query(insertOrder, [
             orderId,
             status,
             Number(totalReceivables.toFixed(2)),
+            totalCost,
             orderCreatedDate,
           ]);
 
