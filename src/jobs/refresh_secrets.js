@@ -1,5 +1,5 @@
 import * as cron from "cron";
-import * as crypto from "crypto";
+import crypto from "crypto";
 import pools from "../sqlPools.js";
 
 const cronJob = cron.CronJob;

@@ -18,8 +18,16 @@ app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
 
-import refresh from "./secrets/refreshSecrets.js";
+// SCHEDULED JOBS
+import refresh from "./jobs/refresh_secrets.js";
+import settlements from "./jobs/order_settlements.js";
 
+// REFRESH SCHEDULES
 refresh.shopeeSecrets.start();
 // refresh.tiktokSecrets.start();
 // refresh.lazadaSecrets.start();
+
+// SETTLEMENTS SCHEDULES
+// settlements.checkShopeeSettlements.start();
+// settlements.checkTiktokSettlements.start();
+// settlements.checkLazadaSettlements.start();

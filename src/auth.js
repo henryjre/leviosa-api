@@ -12,6 +12,6 @@ export function authenticate(req, res, next) {
   if (isAuthenticated) {
     next();
   } else {
-    return res.status(401).json({ message: "Unauthorized" });
+    return res.status(401).json({ ok: false, message: "Unauthorized" });
   }
 }

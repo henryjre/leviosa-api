@@ -1,4 +1,4 @@
-import * as crypto from "crypto";
+import crypto from "crypto";
 import moment from "moment-timezone";
 
 import pools from "../../../sqlPools.js";
@@ -8,6 +8,7 @@ import {
   decrementInventory,
   incrementInventoryAndCost,
 } from "../../../functions/inventory.js";
+import { shopeeGetAPIRequest } from "../../../functions/api_request_functions.js";
 
 export async function catchWebhook(req, res) {
   const secretId = process.env.shopee_secrets_id;
@@ -29,9 +30,11 @@ export async function catchWebhook(req, res) {
       const secrets = secretsResult[0];
 
       const receivedSignature = req.get("Authorization");
+      const body = req.body;
+
       const url =
         "https://jellyfish-app-yevob.ondigitalocean.app/api/v1/webhooks/shopee";
-      const responseContent = JSON.stringify(req.body);
+      const responseContent = JSON.stringify(body);
       const partnerKey = secrets.APP_KEY;
       const sign = signWebhookRequest(url, responseContent, partnerKey);
 
@@ -41,7 +44,6 @@ export async function catchWebhook(req, res) {
 
       res.status(200).json({ ok: true, message: "success" });
 
-      const body = req.body;
       switch (body.code) {
         case 3:
           await orderStatusChange();
@@ -250,18 +252,9 @@ function signWebhookRequest(url, responseContent, partnerKey) {
   return hmac.digest("hex");
 }
 
+//GET SHOPEE ORDER DETAIL
 async function getOrderDetail(secrets, orderId) {
-  const host = "https://partner.shopeemobile.com";
   const path = "/api/v2/order/get_order_detail";
-  const timest = Math.floor(Date.now() / 1000);
-
-  const partnerKey = secrets.APP_KEY;
-  const partnerId = Number(secrets.PARTNER_ID);
-  const accessToken = secrets.ACCESS_TOKEN;
-  const shopId = Number(secrets.SHOP_ID);
-
-  const baseString = `${partnerId}${path}${timest}${accessToken}${shopId}`;
-  const sign = signRequest(baseString, partnerKey);
 
   const optionalFields = [
     "buyer_user_id",
@@ -274,45 +267,9 @@ async function getOrderDetail(secrets, orderId) {
   ];
 
   const params = {
-    partner_id: partnerId,
-    timestamp: timest,
-    access_token: accessToken,
-    shop_id: shopId,
-    sign: sign,
     order_sn_list: orderId,
     response_optional_fields: optionalFields.join(","),
   };
 
-  const url = `${host}${path}?${Object.entries(params)
-    .map(([key, value]) => `${key}=${value}`)
-    .join("&")}`;
-
-  try {
-    const options = {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    };
-    const response = await fetch(url, options);
-    const responseData = await response.json();
-
-    if (!responseData.error) {
-      return { ok: true, data: responseData };
-    } else {
-      return { ok: false, data: responseData, error: responseData.error };
-    }
-  } catch (error) {
-    console.log("SHOPEE FETCH ERROR: ", error);
-    return { ok: false, data: null, error: error.toString() };
-  }
-
-  function signRequest(input, partnerKey) {
-    const inputBuffer = Buffer.from(input, "utf-8");
-    const keyBuffer = Buffer.from(partnerKey, "utf-8");
-    const hmac = crypto.createHmac("sha256", keyBuffer);
-    hmac.update(inputBuffer);
-
-    return hmac.digest("hex");
-  }
+  return shopeeGetAPIRequest(secrets, path, params);
 }

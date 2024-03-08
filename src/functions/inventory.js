@@ -24,7 +24,7 @@ export async function queryProductsPlacement(connection, itemsArray) {
       return {
         sku: p.SKU,
         name: p.PRODUCT_NAME,
-        cost: p.COST_OF_GOODS,
+        cost: Number(p.COST_OF_GOODS),
         quantity: product.quantity,
       };
     });
