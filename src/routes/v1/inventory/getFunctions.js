@@ -23,6 +23,7 @@ export async function getPendingInventoryOut(req, res) {
         return res.status(200).json({ ok: true, message: "success", data: [] });
       } else {
         const filteredResult = selectResult.map((obj) => {
+          delete obj.ID;
           delete obj.SHOPEE;
           delete obj.LAZADA;
           delete obj.TIKTOK;
