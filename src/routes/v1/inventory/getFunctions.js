@@ -132,7 +132,7 @@ export async function getRetailOrders(req, res) {
           obj.CREATED_DATE = moment(obj.CREATED_DATE)
             .tz("Asia/Manila")
             .format("MMMM DD, YYYY h:mm A");
-          obj.ORDER_STATUS = obj.ORDER_STATUS.replace("_", " ");
+          obj.ORDER_STATUS = obj.ORDER_STATUS.replace(/_/g, " ");
           obj.RECEIVABLES_AMOUNT = Number(obj.RECEIVABLES_AMOUNT);
 
           return obj;
