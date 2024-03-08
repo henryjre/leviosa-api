@@ -92,7 +92,7 @@ export async function catchWebhook(req, res) {
             orderFetch.data.data[0].created_at,
             "YYYY-MM-DD HH:mm:ss ZZ"
           )
-            // .tz("Asia/Manila")
+            .tz("Asia/Manila")
             .format("YYYY-MM-DD HH:mm:ss");
 
           const lineItems = await queryProductsPlacement(
@@ -128,11 +128,12 @@ export async function catchWebhook(req, res) {
           await inv_connection.query(insertPending, [pendingItems]);
 
           const insertOrder =
-            "INSERT IGNORE INTO Orders_Lazada (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT) VALUES (?, ?, ?)";
+            "INSERT IGNORE INTO Orders_Lazada (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, CREATED_DATE) VALUES (?, ?, ?, ?)";
           await inv_connection.query(insertOrder, [
             orderId,
             status,
             Number(totalReceivables.toFixed(2)),
+            orderCreatedDate,
           ]);
 
           // await decrementInventory(def_connection, lineItems.products);

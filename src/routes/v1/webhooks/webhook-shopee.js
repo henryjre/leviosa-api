@@ -115,11 +115,12 @@ export async function catchWebhook(req, res) {
           await inv_connection.query(insertPending, [pendingItems]);
 
           const insertOrder =
-            "INSERT IGNORE INTO Orders_Shopee (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT) VALUES (?, ?, ?)";
+            "INSERT IGNORE INTO Orders_Shopee (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, CREATED_DATE) VALUES (?, ?, ?, ?)";
           await inv_connection.query(insertOrder, [
             orderData.order_sn,
             status,
             Number(totalReceivables.toFixed(2)),
+            orderCreatedDate,
           ]);
 
           //   await decrementInventory(def_connection, lineItems.products);
