@@ -59,22 +59,29 @@ export async function tiktokGetAPIRequest(secrets, path, queryParams) {
   }
 }
 
-export async function lazadaGetAPIRequest(secrets, path, params) {
+export async function lazadaGetAPIRequest(secrets, path, queryParams) {
   const accessToken = secrets.ACCESS_TOKEN;
   const appKey = secrets.APP_KEY;
   const appSecret = secrets.APP_SECRET;
   const currentTimestamp = Date.now();
 
   const host = "https://api.lazada.com.ph/rest";
-  params.timestamp = currentTimestamp;
-  params.access_token = accessToken;
-  params.sign_method = "sha256";
-  params.app_key = appKey;
+  const params = {
+    timestamp: currentTimestamp,
+    access_token: accessToken,
+    sign_method: "sha256",
+    app_key: appKey,
+    ...queryParams,
+  };
+
+  let parsedParams = Object.entries(params)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
 
   const signature = signLazadaRequest(path, params, appSecret);
-  params.sign = signature;
+  parsedParams += `&sign=${signature}`;
 
-  const url = `${host}${path}?${new URLSearchParams(params).toString()}`;
+  const url = `${host}${path}?${parsedParams}`;
 
   try {
     const options = {
@@ -82,6 +89,51 @@ export async function lazadaGetAPIRequest(secrets, path, params) {
       headers: {
         "Content-Type": "application/json",
       },
+    };
+    const response = await fetch(url, options);
+    const responseData = await response.json();
+
+    if (responseData.code === 0) {
+      return { ok: true, data: responseData };
+    } else {
+      return { ok: false, data: responseData, error: responseData.error };
+    }
+  } catch (error) {
+    console.log("LAZADA FETCH ERROR: ", error);
+    return { ok: false, data: null, error: error.toString() };
+  }
+}
+
+export async function lazadaPostAPIRequest(secrets, path, payload) {
+  const accessToken = secrets.ACCESS_TOKEN;
+  const appKey = secrets.APP_KEY;
+  const appSecret = secrets.APP_SECRET;
+  const currentTimestamp = Date.now();
+
+  const host = "https://api.lazada.com.ph/rest";
+  const params = {
+    timestamp: currentTimestamp,
+    access_token: accessToken,
+    sign_method: "sha256",
+    app_key: appKey,
+  };
+
+  let parsedParams = Object.entries(params)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+
+  const signature = signLazadaRequest(path, params, appSecret);
+  parsedParams += `&sign=${signature}`;
+
+  const url = `${host}${path}?${parsedParams}`;
+
+  try {
+    const options = {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/xml",
+      },
+      body: JSON.stringify(payload),
     };
     const response = await fetch(url, options);
     const responseData = await response.json();
@@ -128,6 +180,52 @@ export async function shopeeGetAPIRequest(secrets, path, params) {
       headers: {
         "Content-Type": "application/json",
       },
+    };
+    const response = await fetch(url, options);
+    const responseData = await response.json();
+
+    if (!responseData.error) {
+      return { ok: true, data: responseData };
+    } else {
+      return { ok: false, data: responseData, error: responseData.error };
+    }
+  } catch (error) {
+    console.log("SHOPEE FETCH ERROR: ", error);
+    return { ok: false, data: null, error: error.toString() };
+  }
+}
+
+export async function shopeePostAPIRequest(secrets, path, payload) {
+  const host = "https://partner.shopeemobile.com";
+  const timest = Math.floor(Date.now() / 1000);
+
+  const partnerKey = secrets.APP_KEY;
+  const partnerId = Number(secrets.PARTNER_ID);
+  const accessToken = secrets.ACCESS_TOKEN;
+  const shopId = Number(secrets.SHOP_ID);
+
+  const baseString = `${partnerId}${path}${timest}${accessToken}${shopId}`;
+  const sign = signShopeeRequest(baseString, partnerKey);
+
+  const parameters = {
+    partner_id: partnerId,
+    timestamp: timest,
+    access_token: accessToken,
+    shop_id: shopId,
+    sign: sign,
+  };
+
+  const url = `${host}${path}?${Object.entries(parameters)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&")}`;
+
+  try {
+    const options = {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(payload),
     };
     const response = await fetch(url, options);
     const responseData = await response.json();

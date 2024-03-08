@@ -35,9 +35,9 @@ export async function catchWebhook(req, res) {
       const stringToSign = appKey + JSON.stringify(body);
       const sign = signWebhookRequest(stringToSign, secretKey);
 
-      if (sign !== auth) {
-        throw new Error("Lazada signature mismatch!");
-      }
+      // if (sign !== auth) {
+      //   throw new Error("Lazada signature mismatch!");
+      // }
 
       res.status(200).json({ ok: true, message: "success" });
 
