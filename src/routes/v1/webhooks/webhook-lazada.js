@@ -92,7 +92,7 @@ export async function catchWebhook(req, res) {
             orderFetch.data.data[0].created_at,
             "YYYY-MM-DD HH:mm:ss ZZ"
           )
-            .tz("Asia/Manila")
+            // .tz("Asia/Manila")
             .format("YYYY-MM-DD HH:mm:ss");
 
           const lineItems = await queryProductsPlacement(

@@ -81,7 +81,7 @@ export async function catchWebhook(req, res) {
 
           const orderCreatedDate = moment
             .unix(orderData.create_time)
-            .tz("Asia/Manila")
+            // .tz("Asia/Manila")
             .format("YYYY-MM-DD HH:mm:ss");
 
           const lineItems = await queryProductsPlacement(
