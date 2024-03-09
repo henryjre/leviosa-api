@@ -21,11 +21,9 @@ app.listen(PORT, () => {
 // SCHEDULED JOBS
 import refresh from "./jobs/refresh_secrets.js";
 import settlements from "./jobs/order_settlements.js";
-import { deductTiktokProducts } from "./jobs/retail_stock_deduction.js";
-await deductTiktokProducts();
 
 // REFRESH SCHEDULES
-// refresh.shopeeSecrets.start();
+refresh.shopeeSecrets.start();
 // refresh.tiktokSecrets.start();
 // refresh.lazadaSecrets.start();
 

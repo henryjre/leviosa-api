@@ -7,7 +7,7 @@ import {
 import pools from "../sqlPools.js";
 
 // DEDUCT SHOPEE PRODUCTS
-export async function deductShopeeProducts() {
+export async function deductShopeeInventory() {
   const secretId = process.env.shopee_secrets_id;
 
   try {
@@ -35,16 +35,22 @@ export async function deductShopeeProducts() {
       const secrets = secretsResult[0];
 
       const productsToDeduct = [];
+      const idsToComplete = [];
       for (const product of selectResult) {
         const productIndex = productsToDeduct.findIndex(
           (p) => p.sku === product.PRODUCT_SKU
         );
 
         if (productIndex === -1) {
-          productsToDeduct.push({ sku: product.PRODUCT_SKU, quantity: 1 });
+          productsToDeduct.push({
+            sku: product.PRODUCT_SKU,
+            quantity: 1,
+          });
         } else {
           productsToDeduct[productIndex].quantity += 1;
         }
+
+        idsToComplete.push(product.ID);
       }
 
       const shopeeIds = [];
@@ -69,12 +75,27 @@ export async function deductShopeeProducts() {
         productsToDeduct[index].updatedStock = stockToDeduct;
       }
 
+      const notUpdated = [];
       for (const product of productsToDeduct) {
-        await postUpdateShopeeProductStock(
+        const stockUpdate = await postUpdateShopeeProductStock(
           secrets,
           product.shopeeId,
           product.updatedStock
         );
+
+        if (!stockUpdate.ok) {
+          notUpdated.push(product);
+        }
+      }
+
+      const completeQuery = `UPDATE Pending_Inventory_Out SET SHOPEE = 1 WHERE ID IN (${idsToComplete
+        .map((id) => `'${id}'`)
+        .join(", ")});`;
+      await inv_connection.query(completeQuery);
+
+      if (!notUpdated.length) {
+        console.log("No errors in updating Shopee products.");
+        return;
       }
     } finally {
       def_connection.release();
@@ -129,7 +150,7 @@ async function postUpdateShopeeProductStock(secrets, itemId, stock) {
 
 ////////////
 // DEDUCT LAZADA PRODUCTS
-export async function deductLazadaProducts() {
+export async function deductLazadaInventory() {
   const secretId = process.env.lazada_secrets_id;
 
   try {
@@ -157,6 +178,7 @@ export async function deductLazadaProducts() {
       const secrets = secretsResult[0];
 
       const productsToDeduct = [];
+      const idsToComplete = [];
       for (const product of selectResult) {
         const index = productsToDeduct.findIndex(
           (p) => p.SellerSku === product.PRODUCT_SKU
@@ -170,6 +192,8 @@ export async function deductLazadaProducts() {
         } else {
           productsToDeduct[index].quantity += 1;
         }
+
+        idsToComplete.push(product.ID);
       }
 
       const productSkus = selectResult.map((p) => p.PRODUCT_SKU);
@@ -209,8 +233,14 @@ export async function deductLazadaProducts() {
         filteredProducts
       );
 
+      const completeQuery = `UPDATE Pending_Inventory_Out SET LAZADA = 1 WHERE ID IN (${idsToComplete
+        .map((id) => `'${id}'`)
+        .join(", ")});`;
+      await inv_connection.query(completeQuery);
+
       if (!update.ok) {
         console.log(update);
+        return;
       }
     } finally {
       def_connection.release();
@@ -253,7 +283,7 @@ async function getUpdateLazadaProductStock(secrets, skus) {
 
 ////////////
 // DEDUCT TIKTOK PRODUCTS
-export async function deductTiktokProducts() {
+export async function deductTiktokInventory() {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -281,6 +311,7 @@ export async function deductTiktokProducts() {
       const secrets = secretsResult[0];
 
       const productsToDeduct = [];
+      const idsToComplete = [];
       for (const product of selectResult) {
         const index = productsToDeduct.findIndex(
           (p) => p.sku === product.PRODUCT_SKU
@@ -294,6 +325,8 @@ export async function deductTiktokProducts() {
         } else {
           productsToDeduct[index].quantity += 1;
         }
+
+        idsToComplete.push(product.ID);
       }
 
       const productSkus = selectResult.map((p) => p.PRODUCT_SKU);
@@ -355,6 +388,15 @@ export async function deductTiktokProducts() {
           console.log(update);
           continue;
         }
+      }
+
+      const completeQuery = `UPDATE Pending_Inventory_Out SET TIKTOK = 1 WHERE ID IN (${idsToComplete
+        .map((id) => `'${id}'`)
+        .join(", ")});`;
+      await inv_connection.query(completeQuery);
+
+      if (!notUpdated.length) {
+        console.log("No errors in updating tiktok products.");
       }
     } finally {
       def_connection.release();
