@@ -59,6 +59,70 @@ export async function tiktokGetAPIRequest(secrets, path, queryParams) {
   }
 }
 
+export async function tiktokPostAPIRequest(
+  secrets,
+  path,
+  payload,
+  queryParams
+) {
+  const host = "https://open-api.tiktokglobalshop.com";
+  const timest = Math.floor(Date.now() / 1000);
+
+  const accessToken = secrets.ACCESS_TOKEN;
+  const appKey = secrets.APP_KEY;
+  const appSecret = secrets.APP_SECRET;
+  const shopCipher = secrets.SHOP_CIPHER;
+
+  const params = {
+    app_key: appKey,
+    shop_cipher: shopCipher,
+    timestamp: timest,
+  };
+
+  if (queryParams) {
+    Object.assign(params, queryParams);
+  }
+
+  let parsedParams = Object.entries(params)
+    .map(([key, value]) => `${key}=${value}`)
+    .join("&");
+
+  const urlPath = `${path}?${parsedParams}`;
+  const signReqOptions = {
+    url: urlPath,
+    headers: { "content-type": "application/json" },
+    body: payload,
+  };
+
+  const signature = signTiktokRequest(signReqOptions, appSecret);
+
+  parsedParams += `&sign=${signature}`;
+
+  const url = `${host}${path}?${parsedParams}`;
+
+  try {
+    const options = {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-tts-access-token": accessToken,
+      },
+      body: JSON.stringify(payload),
+    };
+    const response = await fetch(url, options);
+    const responseData = await response.json();
+
+    if (responseData.code !== 0) {
+      return { ok: false, data: responseData };
+    } else {
+      return { ok: true, data: responseData };
+    }
+  } catch (error) {
+    console.log("TIKTOK FETCH ERROR: ", error);
+    return { ok: false, data: null, error: error.toString() };
+  }
+}
+
 export async function lazadaGetAPIRequest(secrets, path, queryParams) {
   const accessToken = secrets.ACCESS_TOKEN;
   const appKey = secrets.APP_KEY;
@@ -138,7 +202,7 @@ export async function lazadaPostAPIRequest(secrets, path, payload) {
     const response = await fetch(url, options);
     const responseData = await response.json();
 
-    if (responseData.code === 0) {
+    if (responseData.code == 0) {
       return { ok: true, data: responseData };
     } else {
       return { ok: false, data: responseData, error: responseData.error };

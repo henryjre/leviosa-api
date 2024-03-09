@@ -1,8 +1,8 @@
 import {
   lazadaGetAPIRequest,
-  lazadaPostAPIRequest,
   shopeeGetAPIRequest,
   shopeePostAPIRequest,
+  tiktokPostAPIRequest,
 } from "../functions/api_request_functions.js";
 import pools from "../sqlPools.js";
 
@@ -16,7 +16,7 @@ export async function deductShopeeProducts() {
 
     try {
       const selectQuery =
-        "SELECT * FROM Pending_Inventory_Out WHERE PLATFORM IN ('LAZADA', 'TIKTOK') AND SHOPEE = 0";
+        "SELECT * FROM Pending_Inventory_Out WHERE PLATFORM IN ('LAZADA', 'TIKTOK') AND SHOPEE = 0 LIMIT 20";
       const [selectResult] = await inv_connection.query(selectQuery);
 
       if (!selectResult.length) {
@@ -36,14 +36,14 @@ export async function deductShopeeProducts() {
 
       const productsToDeduct = [];
       for (const product of selectResult) {
-        const index = productsToDeduct.findIndex(
+        const productIndex = productsToDeduct.findIndex(
           (p) => p.sku === product.PRODUCT_SKU
         );
 
-        if (index === -1) {
+        if (productIndex === -1) {
           productsToDeduct.push({ sku: product.PRODUCT_SKU, quantity: 1 });
         } else {
-          productsToDeduct[index].quantity += 1;
+          productsToDeduct[productIndex].quantity += 1;
         }
       }
 
@@ -127,6 +127,7 @@ async function postUpdateShopeeProductStock(secrets, itemId, stock) {
   return shopeePostAPIRequest(secrets, path, payload);
 }
 
+////////////
 // DEDUCT LAZADA PRODUCTS
 export async function deductLazadaProducts() {
   const secretId = process.env.lazada_secrets_id;
@@ -137,7 +138,7 @@ export async function deductLazadaProducts() {
 
     try {
       const selectQuery =
-        "SELECT * FROM Pending_Inventory_Out WHERE PLATFORM IN ('SHOPEE', 'TIKTOK') AND LAZADA = 0";
+        "SELECT * FROM Pending_Inventory_Out WHERE PLATFORM IN ('SHOPEE', 'TIKTOK') AND LAZADA = 0 LIMIT 20";
       const [selectResult] = await inv_connection.query(selectQuery);
 
       if (!selectResult.length) {
@@ -152,6 +153,8 @@ export async function deductLazadaProducts() {
       if (secretsResult.length <= 0) {
         throw new Error("No secrets found.");
       }
+
+      const secrets = secretsResult[0];
 
       const productsToDeduct = [];
       for (const product of selectResult) {
@@ -168,8 +171,6 @@ export async function deductLazadaProducts() {
           productsToDeduct[index].quantity += 1;
         }
       }
-
-      const secrets = secretsResult[0];
 
       const productSkus = selectResult.map((p) => p.PRODUCT_SKU);
 
@@ -203,7 +204,7 @@ export async function deductLazadaProducts() {
           return p;
         });
 
-      const update = await postUpdateLazadaProductStock(
+      const update = await getUpdateLazadaProductStock(
         secrets,
         filteredProducts
       );
@@ -226,7 +227,7 @@ async function getLazadaProductsInfo(secrets, skus) {
   return lazadaGetAPIRequest(secrets, path, params);
 }
 
-async function postUpdateLazadaProductStock(secrets, skus) {
+async function getUpdateLazadaProductStock(secrets, skus) {
   const path = "/product/stock/sellable/update";
 
   const xmlBuilder = (data) => {
@@ -248,4 +249,143 @@ async function postUpdateLazadaProductStock(secrets, skus) {
   };
 
   return lazadaGetAPIRequest(secrets, path, params);
+}
+
+////////////
+// DEDUCT TIKTOK PRODUCTS
+export async function deductTiktokProducts() {
+  const secretId = process.env.tiktok_secrets_id;
+
+  try {
+    const def_connection = await pools.leviosaPool.getConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
+
+    try {
+      const selectQuery =
+        "SELECT * FROM Pending_Inventory_Out WHERE PLATFORM IN ('SHOPEE', 'LAZADA') AND TIKTOK = 0 LIMIT 20";
+      const [selectResult] = await inv_connection.query(selectQuery);
+
+      if (!selectResult.length) {
+        throw new Error("No products to deduct");
+      }
+
+      const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
+      const [secretsResult] = await def_connection.query(querySecrets, [
+        secretId,
+      ]);
+
+      if (secretsResult.length <= 0) {
+        throw new Error("No secrets found.");
+      }
+
+      const secrets = secretsResult[0];
+
+      const productsToDeduct = [];
+      for (const product of selectResult) {
+        const index = productsToDeduct.findIndex(
+          (p) => p.sku === product.PRODUCT_SKU
+        );
+
+        if (index === -1) {
+          productsToDeduct.push({
+            sku: product.PRODUCT_SKU,
+            quantity: 1,
+          });
+        } else {
+          productsToDeduct[index].quantity += 1;
+        }
+      }
+
+      const productSkus = selectResult.map((p) => p.PRODUCT_SKU);
+
+      let productsQuery = await getTiktokProductsInfo(secrets, productSkus);
+      const totalQueryCount = productsQuery.data.data.total_count;
+      let tiktokProducts = productsQuery.data.data.products;
+
+      while (tiktokProducts.length < totalQueryCount) {
+        if (!productsQuery.data.data.next_page_token.length) break;
+
+        productsQuery = await getTiktokProductsInfo(
+          secrets,
+          productSkus,
+          productsQuery.data.data.next_page_token
+        );
+        const newProducts = productsQuery.data.data.products;
+
+        tiktokProducts = [...tiktokProducts, ...newProducts];
+      }
+
+      if (!tiktokProducts) {
+        throw new Error("No Tiktok products to deduct");
+      }
+
+      for (const ttsProduct of tiktokProducts) {
+        const index = productsToDeduct.findIndex(
+          (p) => p.sku === ttsProduct.skus[0].seller_sku
+        );
+
+        if (index !== -1) {
+          const currentStock = ttsProduct.skus[0].inventory[0].quantity;
+          const stockToDeduct = currentStock - productsToDeduct[index].quantity;
+
+          productsToDeduct[index].productId = ttsProduct.id;
+          productsToDeduct[index].updateData = {
+            id: ttsProduct.skus[0].id,
+            inventory: [
+              {
+                quantity: stockToDeduct,
+              },
+            ],
+          };
+        }
+      }
+
+      const filteredProducts = productsToDeduct.filter((p) => p.productId);
+
+      const notUpdated = [];
+      for (const product of filteredProducts) {
+        const update = await postUpdateLazadaProductStock(
+          secrets,
+          product.productId,
+          product.updateData
+        );
+
+        if (!update.ok) {
+          notUpdated.push({ sku: product.sku, quantity: product.quantity });
+          console.log(update);
+          continue;
+        }
+      }
+    } finally {
+      def_connection.release();
+      inv_connection.release();
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
+}
+
+async function getTiktokProductsInfo(secrets, skuIds, pageToken) {
+  const path = `/product/202312/products/search`;
+  const params = {
+    page_size: 100,
+  };
+  const payload = {
+    seller_skus: ["8801954185957"],
+  };
+
+  if (pageToken) {
+    params.page_token = pageToken;
+  }
+
+  return tiktokPostAPIRequest(secrets, path, payload, params);
+}
+
+async function postUpdateLazadaProductStock(secrets, productId, updateData) {
+  const path = `/product/202309/products/${productId}/inventory/update`;
+  const payload = {
+    skus: [updateData],
+  };
+
+  return tiktokPostAPIRequest(secrets, path, payload);
 }

@@ -54,7 +54,7 @@ export function signTiktokRequest(reqOptions, appSecret) {
     let input = keys.map((key) => key + queryParameters[key]).join("");
     input = path + input;
 
-    if (headers["content-type"] !== "multipart/form-data" && body) {
+    if (body) {
       input += JSON.stringify(body);
     }
 
