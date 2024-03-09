@@ -207,7 +207,10 @@ export async function deductLazadaProducts() {
         secrets,
         filteredProducts
       );
-      console.log(update);
+
+      if (!update.ok) {
+        console.log(update);
+      }
     } finally {
       def_connection.release();
       inv_connection.release();
