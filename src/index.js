@@ -24,7 +24,7 @@ import settlements from "./jobs/order_settlements.js";
 import { deductLazadaProducts } from "./jobs/retail_stock_deduction.js";
 
 // REFRESH SCHEDULES
-// refresh.shopeeSecrets.start();
+refresh.shopeeSecrets.start();
 // refresh.tiktokSecrets.start();
 // refresh.lazadaSecrets.start();
 
@@ -33,4 +33,4 @@ import { deductLazadaProducts } from "./jobs/retail_stock_deduction.js";
 // settlements.checkTiktokSettlements.start();
 // settlements.checkLazadaSettlements.start();
 
-await deductLazadaProducts();
+// await deductLazadaProducts();
