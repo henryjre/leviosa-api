@@ -59,7 +59,7 @@ export async function catchWebhook(req, res) {
 
         const updateLiveStreamOrders =
           "UPDATE Tiktok_Livestream_Orders SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-        await inv_connection.query(updateLiveStreamOrders, [status, orderId]);
+        await mgmt_connection.query(updateLiveStreamOrders, [status, orderId]);
 
         if (status === "AWAITING_SHIPMENT") {
           const orderFetch = await getOrderDetail(secrets, orderId);
