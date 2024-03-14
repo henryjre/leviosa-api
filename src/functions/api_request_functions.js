@@ -157,7 +157,7 @@ export async function lazadaGetAPIRequest(secrets, path, queryParams) {
     const response = await fetch(url, options);
     const responseData = await response.json();
 
-    if (responseData.code === 0) {
+    if (responseData.code == 0) {
       return { ok: true, data: responseData };
     } else {
       return { ok: false, data: responseData, error: responseData.error };

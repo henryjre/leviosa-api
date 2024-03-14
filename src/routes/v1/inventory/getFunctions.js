@@ -129,6 +129,7 @@ export async function getRetailOrders(req, res) {
           delete obj.LAST_UPDATED;
           delete obj.DISCORD_CHANNEL;
 
+          obj.SETTLED = parseInt(obj.SETTLED) === 0 ? "NO" : "YES";
           obj.CREATED_DATE = moment(obj.CREATED_DATE)
             .tz("Asia/Manila")
             .format("MMMM DD, YYYY h:mm A");

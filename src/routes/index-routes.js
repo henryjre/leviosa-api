@@ -9,6 +9,7 @@ routes.get("/", (req, res) => {
     .json({ message: "This is the official API for Leviosa Philippines." });
 });
 
+// "/api/v1"
 routes.use("/v1", v1);
 
 export default routes;

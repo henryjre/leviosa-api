@@ -1,3 +1,4 @@
+import { searchShopeeProduct } from "../functions/shopee.js";
 import pools from "../sqlPools.js";
 
 export async function addShopeeInventory() {
@@ -27,7 +28,46 @@ export async function addShopeeInventory() {
 
       const secrets = secretsResult[0];
 
+      const productsToIncrease = [];
+      const idsToComplete = [];
+      for (const product of selectResult) {
+        const productIndex = productsToIncrease.findIndex(
+          (p) => p.sku === product.PRODUCT_SKU
+        );
 
+        if (productIndex === -1) {
+          productsToIncrease.push({
+            sku: product.PRODUCT_SKU,
+            quantity: 1,
+          });
+        } else {
+          productsToIncrease[productIndex].quantity += 1;
+        }
+
+        idsToComplete.push(product.ID);
+      }
+
+      const shopeeIds = [];
+      for (const product of productsToDeduct) {
+        const shopeeProduct = await searchShopeeProduct(secrets, product.sku);
+        product.shopeeId = shopeeProduct.data.response.item_id_list[0];
+        shopeeIds.push(shopeeProduct.data.response.item_id_list[0]);
+      }
+
+      const shopeeProductsInfo = await getShopeeProductsInfo(
+        secrets,
+        shopeeIds
+      );
+
+      for (const shopeeProduct of shopeeProductsInfo.data.response.item_list) {
+        const index = productsToDeduct.findIndex(
+          (p) => p.shopeeId === shopeeProduct.item_id
+        );
+
+        const currentStock = shopeeProduct.stock_info_v2.seller_stock[0].stock;
+        const stockToDeduct = currentStock - productsToDeduct[index].quantity;
+        productsToDeduct[index].updatedStock = stockToDeduct;
+      }
     } finally {
       def_connection.release();
       inv_connection.release();

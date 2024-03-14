@@ -11,7 +11,10 @@ v1.get("/webhooks", (req, res) => {
     .json({ message: "This is the official API for Leviosa." });
 });
 
+// "/api/v1/webhook"
 v1.use("/webhooks", webhooks);
+
+// "/api/v1/inventory"
 v1.use("/inventory", authenticate, inventory);
 
 export default v1;

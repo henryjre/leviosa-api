@@ -11,6 +11,7 @@ import routes from "./routes/index-routes.js";
 app.use(helmet());
 app.use(express.json());
 
+// "/api"
 app.use("/api", routes);
 
 // Turn on that server!
@@ -24,10 +25,10 @@ import settlements from "./jobs/order_settlements.js";
 
 // REFRESH SCHEDULES
 refresh.shopeeSecrets.start();
-// refresh.tiktokSecrets.start();
-// refresh.lazadaSecrets.start();
+refresh.tiktokSecrets.start();
+refresh.lazadaSecrets.start();
 
 // SETTLEMENTS SCHEDULES
-// settlements.checkShopeeSettlements.start();
-// settlements.checkTiktokSettlements.start();
-// settlements.checkLazadaSettlements.start();
+settlements.checkShopeeSettlements.start();
+settlements.checkTiktokSettlements.start();
+settlements.checkLazadaSettlements.start();
