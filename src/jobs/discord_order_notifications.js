@@ -8,7 +8,26 @@ import * as cron from "cron";
 const cronJob = cron.CronJob;
 const path = "/api/notifications/orders/createOrderThread";
 
-export async function shopeeOrderNotif() {
+const discordNotificationsJob = new cronJob(
+  "30 * * * *",
+  async () => {
+    console.log("Running shopee discord notifications...");
+    await shopeeOrderNotif();
+    console.log("Running lazada discord notifications...");
+    await lazadaOrderNotif();
+    console.log("Running tiktok discord notifications...");
+    await tiktokOrderNotif();
+  },
+  null,
+  false,
+  "Asia/Manila"
+);
+
+export default {
+  discordNotificationsJob,
+};
+
+async function shopeeOrderNotif() {
   const secretId = process.env.shopee_secrets_id;
 
   try {
@@ -85,7 +104,7 @@ export async function shopeeOrderNotif() {
   }
 }
 
-export async function lazadaOrderNotif() {
+async function lazadaOrderNotif() {
   const secretId = process.env.lazada_secrets_id;
 
   try {
@@ -162,7 +181,7 @@ export async function lazadaOrderNotif() {
   }
 }
 
-export async function tiktokOrderNotif() {
+async function tiktokOrderNotif() {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
