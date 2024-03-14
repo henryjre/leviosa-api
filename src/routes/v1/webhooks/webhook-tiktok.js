@@ -10,6 +10,7 @@ import {
   incrementInventoryAndCost,
 } from "../../../functions/inventory.js";
 import { signTiktokRequest } from "../../../functions/api_sign_functions.js";
+import { botApiPostCall } from "../../../functions/api_request_functions.js";
 
 export async function catchWebhook(req, res) {
   const secretId = process.env.tiktok_secrets_id;

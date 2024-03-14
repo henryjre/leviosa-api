@@ -8,7 +8,10 @@ import {
   decrementInventory,
   incrementInventoryAndCost,
 } from "../../../functions/inventory.js";
-import { shopeeGetAPIRequest } from "../../../functions/api_request_functions.js";
+import {
+  botApiPostCall,
+  shopeeGetAPIRequest,
+} from "../../../functions/api_request_functions.js";
 
 export async function catchWebhook(req, res) {
   const secretId = process.env.shopee_secrets_id;
