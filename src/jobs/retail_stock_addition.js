@@ -10,7 +10,7 @@ export async function addShopeeInventory() {
 
     try {
       const selectQuery = `
-        SELECT * FROM Cancelled_Inventory_Out UNION ALL SELECT ID,ORDER_ID,PRODUCT_SKU,PRODUCT_NAME,ORDER_CREATED,PLATFORM,PRODUCT_COGS,SHOPEE,LAZADA,TIKTOK FROM Completed_Inventory_In WHERE PLATFORM IN ('LAZADA', 'TIKTOK') AND SHOPEE = 0 LIMIT 20;`;
+        (SELECT * FROM Cancelled_Inventory_Out WHERE PLATFORM IN ('LAZADA', 'TIKTOK') AND SHOPEE = 0 LIMIT 20) UNION ALL (SELECT ID,ORDER_ID,PRODUCT_SKU,PRODUCT_NAME,ORDER_CREATED,PLATFORM,PRODUCT_COGS,SHOPEE,LAZADA,TIKTOK FROM Completed_Inventory_In WHERE PLATFORM IN ('LAZADA', 'TIKTOK') AND SHOPEE = 0 LIMIT 20)`;
       const [selectResult] = await inv_connection.query(selectQuery);
 
       if (!selectResult.length) {

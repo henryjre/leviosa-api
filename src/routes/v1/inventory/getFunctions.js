@@ -104,20 +104,23 @@ export async function getRetailOrders(req, res) {
       throw new Error("Invalid parameters");
     }
 
-    if (!["SHOPEE", "LAZADA", "TIKTOK"].includes(platform)) {
+    if (!["SHOPEE", "LAZADA", "TIKTOK", "ALL"].includes(platform)) {
       throw new Error("Invalid platform");
     }
 
-    let table;
+    let queryString;
     switch (platform) {
       case "SHOPEE":
-        table = "Orders_Shopee";
+        queryString = `SELECT *, 'SHOPEE' AS PLATFORM FROM Orders_Shopee WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
         break;
       case "LAZADA":
-        table = "Orders_Lazada";
+        queryString = `SELECT *, 'LAZADA' AS PLATFORM FROM Orders_Lazada WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
         break;
       case "TIKTOK":
-        table = "Orders_Tiktok";
+        queryString = `SELECT *, 'TIKTOK' AS PLATFORM FROM Orders_Tiktok WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
+        break;
+      case "ALL":
+        queryString = null;
         break;
 
       default:
@@ -127,11 +130,34 @@ export async function getRetailOrders(req, res) {
     const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
-      const selectQuery = `SELECT * FROM ${table} WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
-      const [selectResult] = await inv_connection.query(selectQuery, [
-        start_date,
-        end_date,
-      ]);
+      let queryResult;
+      if (queryString === null) {
+        const selectQuery = `
+  SELECT * FROM (
+    (SELECT *, 'SHOPEE' AS PLATFORM FROM Orders_Shopee WHERE CREATED_DATE BETWEEN ? AND ?)
+    UNION ALL
+    (SELECT *, 'LAZADA' AS PLATFORM FROM Orders_Lazada WHERE CREATED_DATE BETWEEN ? AND ?)
+    UNION ALL
+    (SELECT *, 'TIKTOK' AS PLATFORM FROM Orders_Tiktok WHERE CREATED_DATE BETWEEN ? AND ?)
+  ) AS CombinedOrders
+  ORDER BY CREATED_DATE ASC;
+`;
+        queryResult = await inv_connection.query(selectQuery, [
+          start_date,
+          end_date,
+          start_date,
+          end_date,
+          start_date,
+          end_date,
+        ]);
+      } else {
+        queryResult = await inv_connection.query(queryString, [
+          start_date,
+          end_date,
+        ]);
+      }
+
+      const selectResult = queryResult[0];
 
       if (!selectResult.length) {
         return res.status(200).json({ ok: true, message: "success", data: [] });
