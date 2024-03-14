@@ -46,12 +46,23 @@ export async function getInventoryProductOrders(req, res) {
     const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
-      const selectQuery = `SELECT * FROM ${table} WHERE ORDER_CREATED BETWEEN ? AND ? AND PLATFORM = ? ORDER BY ORDER_CREATED ASC;`;
-      const [selectResult] = await inv_connection.query(selectQuery, [
-        start_date,
-        end_date,
-        platform,
-      ]);
+      let queryResult;
+      if (platform !== "ALL") {
+        const selectQuery = `SELECT * FROM ${table} WHERE ORDER_CREATED BETWEEN ? AND ? AND PLATFORM = ? ORDER BY ORDER_CREATED ASC;`;
+        queryResult = await inv_connection.query(selectQuery, [
+          start_date,
+          end_date,
+          platform,
+        ]);
+      } else if (platform === "ALL") {
+        const selectQuery = `SELECT * FROM ${table} WHERE ORDER_CREATED BETWEEN ? AND ? ORDER BY ORDER_CREATED ASC;`;
+        queryResult = await inv_connection.query(selectQuery, [
+          start_date,
+          end_date,
+        ]);
+      }
+
+      const selectResult = queryResult[0];
 
       if (!selectResult.length) {
         return res.status(200).json({ ok: true, message: "success", data: [] });
