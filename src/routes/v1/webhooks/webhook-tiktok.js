@@ -128,7 +128,7 @@ export async function catchWebhook(req, res) {
             orderCreatedDate,
           ]);
 
-          //   await decrementInventory(def_connection, lineItems.products);
+          await decrementInventory(def_connection, lineItems.products);
         } else if (status === "CANCEL") {
           const selectOrderQuery =
             "SELECT * FROM Orders_Tiktok WHERE ORDER_ID = ?";
@@ -240,7 +240,7 @@ export async function catchWebhook(req, res) {
               });
             }
 
-            // await incrementInventoryAndCost(def_connection, toUpdate);
+            await incrementInventoryAndCost(def_connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);

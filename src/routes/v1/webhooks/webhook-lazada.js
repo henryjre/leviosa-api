@@ -3,6 +3,8 @@ import moment from "moment-timezone";
 
 import pools from "../../../sqlPools.js";
 import {
+  decrementInventory,
+  incrementInventoryAndCost,
   queryProductsCancel,
   queryProductsPlacement,
 } from "../../../functions/inventory.js";
@@ -138,7 +140,7 @@ export async function catchWebhook(req, res) {
             orderCreatedDate,
           ]);
 
-          // await decrementInventory(def_connection, lineItems.products);
+          await decrementInventory(def_connection, lineItems.products);
         } else if (["canceled", "shipped_back"].includes(status)) {
           const selectOrderQuery =
             "SELECT * FROM Orders_Lazada WHERE ORDER_ID = ?";
@@ -245,7 +247,7 @@ export async function catchWebhook(req, res) {
               });
             }
 
-            // await incrementInventoryAndCost(def_connection, toUpdate);
+            await incrementInventoryAndCost(def_connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);
