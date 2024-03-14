@@ -12,8 +12,6 @@ import { lazadaGetAPIRequest } from "../../../functions/api_request_functions.js
 
 const processedLazadaOrders = new Set();
 export async function catchWebhook(req, res) {
-  return res.status(200).json({ ok: true, message: "success" });
-
   try {
     const body = req.body;
     const auth = req.headers.authorization;
