@@ -73,9 +73,9 @@ export async function getInventoryProductOrders(req, res) {
           delete obj.LAZADA;
           delete obj.TIKTOK;
 
-          obj.ORDER_CREATED = moment(obj.ORDER_CREATED)
-            .tz("Asia/Manila")
-            .format("MMMM DD, YYYY h:mm A");
+          obj.ORDER_CREATED = moment(obj.ORDER_CREATED).format(
+            "MMMM DD, YYYY h:mm A"
+          );
           obj.PRODUCT_COGS = Number(obj.PRODUCT_COGS);
 
           return obj;
@@ -141,9 +141,9 @@ export async function getRetailOrders(req, res) {
           delete obj.DISCORD_CHANNEL;
 
           obj.SETTLED = parseInt(obj.SETTLED) === 0 ? "NO" : "YES";
-          obj.CREATED_DATE = moment(obj.CREATED_DATE)
-            .tz("Asia/Manila")
-            .format("MMMM DD, YYYY h:mm A");
+          obj.CREATED_DATE = moment(obj.CREATED_DATE).format(
+            "MMMM DD, YYYY h:mm A"
+          );
           obj.ORDER_STATUS = obj.ORDER_STATUS.replace(/_/g, " ");
           obj.RECEIVABLES_AMOUNT = Number(obj.RECEIVABLES_AMOUNT);
 
