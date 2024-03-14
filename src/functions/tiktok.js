@@ -1,4 +1,7 @@
-import { tiktokPostAPIRequest } from "./api_request_functions.js";
+import {
+  tiktokPostAPIRequest,
+  tiktokGetAPIRequest,
+} from "./api_request_functions.js";
 
 export async function getTiktokProductsInfo(secrets, skuIds, pageToken) {
   const path = `/product/202312/products/search`;
@@ -27,4 +30,13 @@ export async function postUpdateTiktokProductStock(
   };
 
   return tiktokPostAPIRequest(secrets, path, payload);
+}
+
+export async function getTiktokOrdersDetails(secrets, orderIds) {
+  const path = "/order/202309/orders";
+  const queryParams = {
+    ids: JSON.stringify(orderIds),
+  };
+
+  return tiktokGetAPIRequest(secrets, path, queryParams);
 }

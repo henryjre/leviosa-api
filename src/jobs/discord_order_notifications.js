@@ -1,7 +1,12 @@
+import { botApiPostCall } from "../functions/api_request_functions.js";
 import { getMultipleLazOrders } from "../functions/lazada.js";
 import { getShopeeOrders } from "../functions/shopee.js";
+import { getTiktokOrdersDetails } from "../functions/tiktok.js";
 import pools from "../sqlPools.js";
-import fetch from "node-fetch";
+
+import * as cron from "cron";
+const cronJob = cron.CronJob;
+const path = "/api/notifications/orders/createOrderThread";
 
 export async function shopeeOrderNotif() {
   const secretId = process.env.shopee_secrets_id;
@@ -40,15 +45,38 @@ export async function shopeeOrderNotif() {
         );
       }
 
-      const orders = shopeeOrdersFetch.data.response.order_list[0];
+      const orders = shopeeOrdersFetch.data.response.order_list;
 
       const fetchBody = {
         data: orders,
         platform: "SHOPEE",
       };
 
-      const fetchResult = await sendNotificationData(fetchBody);
-      console.log(fetchResult);
+      const fetchResult = await botApiPostCall(fetchBody, path);
+      if (fetchResult === null) {
+        throw new Error(
+          "There was a problem while creating threads for shopee notifications."
+        );
+      }
+
+      const updateData = fetchResult.updated;
+
+      if (updateData.length <= 0) {
+        throw new Error("No threads were created for shopee orders.");
+      }
+
+      const updateQuery = `
+  UPDATE Orders_Shopee
+  SET DISCORD_CHANNEL = CASE ORDER_ID
+    ${updateData
+      .map((order) => `WHEN '${order.orderId}' THEN ${order.threadId}`)
+      .join(" ")}
+  END
+  WHERE ORDER_ID IN (${updateData
+    .map((order) => `'${order.orderId}'`)
+    .join(", ")});
+`;
+      await inv_connection.query(updateQuery);
     } finally {
       inv_connection.release();
     }
@@ -101,8 +129,31 @@ export async function lazadaOrderNotif() {
         platform: "LAZADA",
       };
 
-      const fetchResult = await sendNotificationData(fetchBody);
-      console.log(fetchResult);
+      const fetchResult = await botApiPostCall(fetchBody, path);
+      if (fetchResult === null) {
+        throw new Error(
+          "There was a problem while creating threads for lazada notifications."
+        );
+      }
+
+      const updateData = fetchResult.updated;
+
+      if (updateData.length <= 0) {
+        throw new Error("No threads were created for lazada orders.");
+      }
+
+      const updateQuery = `
+  UPDATE Orders_Lazada
+  SET DISCORD_CHANNEL = CASE ORDER_ID
+    ${updateData
+      .map((order) => `WHEN '${order.orderId}' THEN ${order.threadId}`)
+      .join(" ")}
+  END
+  WHERE ORDER_ID IN (${updateData
+    .map((order) => `'${order.orderId}'`)
+    .join(", ")});
+`;
+      await inv_connection.query(updateQuery);
     } finally {
       inv_connection.release();
     }
@@ -111,23 +162,86 @@ export async function lazadaOrderNotif() {
   }
 }
 
-async function sendNotificationData(fetchBody) {
-  const apiUrl = "https://leviosa.mysrv.us";
-  const path = "/api/notifications/orders/createOrderThread";
+export async function tiktokOrderNotif() {
+  const secretId = process.env.tiktok_secrets_id;
 
-  const url = `${apiUrl}${path}`;
+  try {
+    const def_connection = await pools.leviosaPool.getConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
-  const options = {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "x-api-key": process.env.apiKey,
-    },
-    body: JSON.stringify(fetchBody),
-  };
+    try {
+      const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
+      const [secretsResult] = await def_connection.query(querySecrets, [
+        secretId,
+      ]);
 
-  const response = await fetch(url, options);
-  const responseData = await response.json();
+      if (secretsResult.length <= 0) {
+        throw new Error("No secrets found.");
+      }
 
-  return responseData;
+      const secrets = secretsResult[0];
+
+      const selectOrdersQuery = `SELECT * FROM Orders_Tiktok WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
+      const [tiktokOrdersDb] = await inv_connection.query(selectOrdersQuery);
+
+      if (!tiktokOrdersDb.length) {
+        console.log("No tiktok orders for new discord notification");
+        return;
+      }
+
+      const orderIds = tiktokOrdersDb.map((o) => o.ORDER_ID);
+      const tiktokOrdersFetch = await getTiktokOrdersDetails(secrets, orderIds);
+
+      if (!tiktokOrdersFetch.ok) {
+        console.log(tiktokOrdersFetch);
+        throw new Error(
+          "There was a problem while fetching shopee orders from function shopeeOrderNotif()"
+        );
+      }
+
+      if (tiktokOrdersFetch.data.code !== 0) {
+        console.log(tiktokOrdersFetch.data);
+        throw new Error(
+          "There was a problem while fetching shopee orders from function shopeeOrderNotif()"
+        );
+      }
+
+      const orders = tiktokOrdersFetch.data.data.orders;
+
+      const fetchBody = {
+        data: orders,
+        platform: "TIKTOK",
+      };
+
+      const fetchResult = await botApiPostCall(fetchBody, path);
+      if (fetchResult === null) {
+        throw new Error(
+          "There was a problem while creating threads for tiktok notifications."
+        );
+      }
+
+      const updateData = fetchResult.updated;
+
+      if (updateData.length <= 0) {
+        throw new Error("No threads were created for tiktok orders.");
+      }
+
+      const updateQuery = `
+  UPDATE Orders_Tiktok
+  SET DISCORD_CHANNEL = CASE ORDER_ID
+    ${updateData
+      .map((order) => `WHEN '${order.orderId}' THEN ${order.threadId}`)
+      .join(" ")}
+  END
+  WHERE ORDER_ID IN (${updateData
+    .map((order) => `'${order.orderId}'`)
+    .join(", ")});
+`;
+      await inv_connection.query(updateQuery);
+    } finally {
+      inv_connection.release();
+    }
+  } catch (error) {
+    console.log(error.toString());
+  }
 }

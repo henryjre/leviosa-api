@@ -304,3 +304,27 @@ export async function shopeePostAPIRequest(secrets, path, payload) {
     return { ok: false, data: null, error: error.toString() };
   }
 }
+
+export async function botApiPostCall(fetchBody, path) {
+  const apiUrl = "https://leviosa.mysrv.us";
+
+  const url = `${apiUrl}${path}`;
+
+  const options = {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "x-api-key": process.env.apiKey,
+    },
+    body: JSON.stringify(fetchBody),
+  };
+
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    console.log(response);
+    return null;
+  }
+  const responseData = await response.json();
+
+  return responseData;
+}

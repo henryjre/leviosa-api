@@ -248,6 +248,22 @@ export async function catchWebhook(req, res) {
           const updateQuery =
             "UPDATE Orders_Tiktok SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
           await inv_connection.query(updateQuery, [status, orderId]);
+
+          const selectQuery =
+            "SELECT DISCORD_CHANNEL FROM Orders_Tiktok WHERE ORDER_ID = ?";
+          const [order] = await inv_connection.query(selectQuery, [orderId]);
+
+          if (!order.length) {
+            return;
+          }
+
+          const path = "/api/notifications/orders/updateOrderThread";
+          const fetchBody = {
+            status: status,
+            threadId: order[0].DISCORD_CHANNEL,
+            platform: "TIKTOK",
+          };
+          await botApiPostCall(fetchBody, path);
         }
       }
     } finally {
