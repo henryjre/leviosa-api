@@ -224,7 +224,7 @@ export async function getMainInventory(req, res) {
             ORDER BY 
                 PRODUCT_NAME ASC;
 `;
-      const [rows] = await connection.execute(queryString);
+      const [rows] = await def_connection.execute(queryString);
 
       return res
         .status(200)
