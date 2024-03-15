@@ -191,7 +191,7 @@ export async function getRetailOrders(req, res) {
   }
 }
 
-export async function getMainInventory() {
+export async function getMainInventory(req, res) {
   try {
     const def_connection = pools.leviosaPool.getConnection();
     try {
