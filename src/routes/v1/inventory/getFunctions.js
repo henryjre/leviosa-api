@@ -226,9 +226,7 @@ export async function getMainInventory(req, res) {
 `;
       const [rows] = await def_connection.execute(queryString);
 
-      return res
-        .status(200)
-        .json({ ok: true, message: error.message, data: rows });
+      return res.status(200).json({ ok: true, message: "success", data: rows });
     } finally {
       def_connection.release();
     }
