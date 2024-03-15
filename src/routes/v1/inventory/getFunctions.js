@@ -193,7 +193,7 @@ export async function getRetailOrders(req, res) {
 
 export async function getMainInventory(req, res) {
   try {
-    const def_connection = pools.leviosaPool.getConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
     try {
       const queryString = `SELECT 
                 SINGLE_LISTING, 
@@ -230,7 +230,7 @@ export async function getMainInventory(req, res) {
         .status(200)
         .json({ ok: true, message: error.message, data: rows });
     } finally {
-      await def_connection.release();
+      def_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
