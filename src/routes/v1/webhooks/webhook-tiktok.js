@@ -191,63 +191,61 @@ export async function catchWebhook(req, res) {
               orderId,
             ]);
 
-            if (products.length === 0) {
-              return;
-            }
-
-            const skuArray = [];
-            for (const item of orderData.line_items) {
-              const itemIndex = skuArray.findIndex(
-                (i) => i.sku === item.seller_sku
-              );
-
-              if (itemIndex === -1) {
-                const product = products.find(
-                  (p) => p.PRODUCT_SKU === item.seller_sku
+            if (products.length > 0) {
+              const skuArray = [];
+              for (const item of orderData.line_items) {
+                const itemIndex = skuArray.findIndex(
+                  (i) => i.sku === item.seller_sku
                 );
 
-                if (!product) continue;
-                skuArray.push({
-                  sku: item.seller_sku,
-                  name: product.PRODUCT_NAME,
-                  quantity: 1,
-                  cost: product.PRODUCT_COGS,
-                });
-              } else {
-                skuArray[itemIndex].quantity += 1;
+                if (itemIndex === -1) {
+                  const product = products.find(
+                    (p) => p.PRODUCT_SKU === item.seller_sku
+                  );
+
+                  if (!product) continue;
+                  skuArray.push({
+                    sku: item.seller_sku,
+                    name: product.PRODUCT_NAME,
+                    quantity: 1,
+                    cost: product.PRODUCT_COGS,
+                  });
+                } else {
+                  skuArray[itemIndex].quantity += 1;
+                }
               }
-            }
 
-            const lineItems = await queryProductsCancel(
-              def_connection,
-              skuArray
-            );
-
-            const toUpdate = [];
-            for (const product of skuArray) {
-              const item = lineItems.products.find(
-                (i) => i.sku === product.sku
+              const lineItems = await queryProductsCancel(
+                def_connection,
+                skuArray
               );
 
-              const totalProductCost =
-                Number(product.quantity) * Number(product.cost) +
-                Number(item.quantity) * Number(item.cost);
-              const totalProductQuantity =
-                Number(product.quantity) + Number(item.quantity);
+              const toUpdate = [];
+              for (const product of skuArray) {
+                const item = lineItems.products.find(
+                  (i) => i.sku === product.sku
+                );
 
-              const totalNewCost = parseFloat(
-                (totalProductCost / totalProductQuantity).toFixed(2)
-              );
+                const totalProductCost =
+                  Number(product.quantity) * Number(product.cost) +
+                  Number(item.quantity) * Number(item.cost);
+                const totalProductQuantity =
+                  Number(product.quantity) + Number(item.quantity);
 
-              toUpdate.push({
-                sku: product.sku,
-                name: product.name,
-                quantity: product.quantity,
-                newCost: totalNewCost,
-              });
+                const totalNewCost = parseFloat(
+                  (totalProductCost / totalProductQuantity).toFixed(2)
+                );
+
+                toUpdate.push({
+                  sku: product.sku,
+                  name: product.name,
+                  quantity: product.quantity,
+                  newCost: totalNewCost,
+                });
+              }
+
+              await incrementInventoryAndCost(def_connection, toUpdate);
             }
-
-            await incrementInventoryAndCost(def_connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);

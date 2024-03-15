@@ -203,60 +203,58 @@ export async function catchWebhook(req, res) {
               orderId,
             ]);
 
-            if (products.length === 0) {
-              return;
-            }
+            if (products.length > 0) {
+              const skuArray = [];
+              for (const item of orderFetch.data.data) {
+                const itemIndex = skuArray.findIndex((i) => i.sku === item.sku);
+                if (itemIndex === -1) {
+                  const product = products.find(
+                    (p) => p.PRODUCT_SKU === item.sku
+                  );
 
-            const skuArray = [];
-            for (const item of orderFetch.data.data) {
-              const itemIndex = skuArray.findIndex((i) => i.sku === item.sku);
-              if (itemIndex === -1) {
-                const product = products.find(
-                  (p) => p.PRODUCT_SKU === item.sku
+                  if (!product) continue;
+                  skuArray.push({
+                    sku: item.sku,
+                    name: product.PRODUCT_NAME,
+                    quantity: 1,
+                    cost: product.PRODUCT_COGS,
+                  });
+                } else {
+                  skuArray[itemIndex].quantity += 1;
+                }
+              }
+
+              const lineItems = await queryProductsCancel(
+                def_connection,
+                skuArray
+              );
+
+              const toUpdate = [];
+              for (const product of skuArray) {
+                const item = lineItems.products.find(
+                  (i) => i.sku === product.sku
                 );
 
-                if (!product) continue;
-                skuArray.push({
-                  sku: item.sku,
-                  name: product.PRODUCT_NAME,
-                  quantity: 1,
-                  cost: product.PRODUCT_COGS,
+                const totalProductCost =
+                  Number(product.quantity) * Number(product.cost) +
+                  Number(item.quantity) * Number(item.cost);
+                const totalProductQuantity =
+                  Number(product.quantity) + Number(item.quantity);
+
+                const totalNewCost = parseFloat(
+                  (totalProductCost / totalProductQuantity).toFixed(2)
+                );
+
+                toUpdate.push({
+                  sku: product.sku,
+                  name: product.name,
+                  quantity: product.quantity,
+                  newCost: totalNewCost,
                 });
-              } else {
-                skuArray[itemIndex].quantity += 1;
               }
+
+              await incrementInventoryAndCost(def_connection, toUpdate);
             }
-
-            const lineItems = await queryProductsCancel(
-              def_connection,
-              skuArray
-            );
-
-            const toUpdate = [];
-            for (const product of skuArray) {
-              const item = lineItems.products.find(
-                (i) => i.sku === product.sku
-              );
-
-              const totalProductCost =
-                Number(product.quantity) * Number(product.cost) +
-                Number(item.quantity) * Number(item.cost);
-              const totalProductQuantity =
-                Number(product.quantity) + Number(item.quantity);
-
-              const totalNewCost = parseFloat(
-                (totalProductCost / totalProductQuantity).toFixed(2)
-              );
-
-              toUpdate.push({
-                sku: product.sku,
-                name: product.name,
-                quantity: product.quantity,
-                newCost: totalNewCost,
-              });
-            }
-
-            await incrementInventoryAndCost(def_connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);

@@ -194,50 +194,48 @@ export async function catchWebhook(req, res) {
               orderData.order_sn,
             ]);
 
-            if (products.length === 0) {
-              return;
-            }
-
-            const skuArray = orderData.item_list.map((item) => {
-              const itemSku =
-                item.model_sku.length > 0 ? item.model_sku : item.item_sku;
-              const product = products.find((p) => p.PRODUCT_SKU === itemSku);
-              return {
-                sku: itemSku,
-                name: product.PRODUCT_NAME,
-                quantity: item.model_quantity_purchased,
-                cost: product.PRODUCT_COGS,
-              };
-            });
-            const lineItems = await queryProductsCancel(
-              def_connection,
-              skuArray
-            );
-
-            const toUpdate = [];
-            for (const product of skuArray) {
-              const item = lineItems.products.find(
-                (i) => i.sku === product.sku
-              );
-
-              const totalProductCost =
-                Number(product.quantity) * Number(product.cost) +
-                Number(item.quantity) * Number(item.cost);
-              const totalProductQuantity =
-                Number(product.quantity) + Number(item.quantity);
-
-              const totalNewCost = parseFloat(
-                (totalProductCost / totalProductQuantity).toFixed(2)
-              );
-
-              toUpdate.push({
-                sku: product.sku,
-                name: product.name,
-                quantity: product.quantity,
-                newCost: totalNewCost,
+            if (products.length > 0) {
+              const skuArray = orderData.item_list.map((item) => {
+                const itemSku =
+                  item.model_sku.length > 0 ? item.model_sku : item.item_sku;
+                const product = products.find((p) => p.PRODUCT_SKU === itemSku);
+                return {
+                  sku: itemSku,
+                  name: product.PRODUCT_NAME,
+                  quantity: item.model_quantity_purchased,
+                  cost: product.PRODUCT_COGS,
+                };
               });
+              const lineItems = await queryProductsCancel(
+                def_connection,
+                skuArray
+              );
+
+              const toUpdate = [];
+              for (const product of skuArray) {
+                const item = lineItems.products.find(
+                  (i) => i.sku === product.sku
+                );
+
+                const totalProductCost =
+                  Number(product.quantity) * Number(product.cost) +
+                  Number(item.quantity) * Number(item.cost);
+                const totalProductQuantity =
+                  Number(product.quantity) + Number(item.quantity);
+
+                const totalNewCost = parseFloat(
+                  (totalProductCost / totalProductQuantity).toFixed(2)
+                );
+
+                toUpdate.push({
+                  sku: product.sku,
+                  name: product.name,
+                  quantity: product.quantity,
+                  newCost: totalNewCost,
+                });
+              }
+              await incrementInventoryAndCost(def_connection, toUpdate);
             }
-            await incrementInventoryAndCost(def_connection, toUpdate);
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderData.order_sn]);
