@@ -190,3 +190,52 @@ export async function getRetailOrders(req, res) {
       .json({ ok: false, message: error.message, data: [] });
   }
 }
+
+export async function getMainInventory() {
+  try {
+    const def_connection = pools.leviosaPool.getConnection();
+    try {
+      const queryString = `SELECT 
+                SINGLE_LISTING, 
+                SKU,
+                BRAND,
+                PRODUCT_NAME,
+                TOTAL_QUANTITY,
+                OLD_QUANTITY,
+                NEW_QUANTITY,
+                OLD_EXPIRATION_DATE,
+                NEW_EXPIRATION_DATE,
+                WEIGHT,
+                "L(cm)",
+                "W(cm)",
+                "H(cm)",
+                SRP,
+                REGULAR_DISCOUNTED_PRICE,
+                RESELLER_PRICE,
+                CAMPAIGN_PRICE,
+                COST_OF_GOODS,
+                PRODUCT_DESCRIPTION,
+                HOW_TO_USE,
+                INGREDIENTS,
+                BENEFITS,
+                DISCLAIMER 
+            FROM 
+                Leviosa_Inventory 
+            ORDER BY 
+                PRODUCT_NAME ASC;
+`;
+      const [rows] = await connection.execute(queryString);
+
+      return res
+        .status(200)
+        .json({ ok: true, message: error.message, data: rows });
+    } finally {
+      await def_connection.release();
+    }
+  } catch (error) {
+    console.log(error.toString());
+    return res
+      .status(404)
+      .json({ ok: false, message: error.message, data: [] });
+  }
+}

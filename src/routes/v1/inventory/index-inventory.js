@@ -19,4 +19,7 @@ inventory.get("/markSoldOutProduct", deduction.soldOutRetailStock);
 // "/api/v1/inventory/syncInventory"
 inventory.get("/syncInventory", deduction.syncInventories);
 
+// "/api/v1/inventory/getInventory"
+inventory.get("/getInventory", get.getMainInventory);
+
 export default inventory;
