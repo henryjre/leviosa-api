@@ -6,7 +6,7 @@ const cronJob = cron.CronJob;
 
 //Refresh shopee secrets every 4 hours
 const shopeeSecrets = new cronJob(
-  "0 */4 * * *",
+  "40 */3 * * *",
   async () => {
     console.log("Refreshing shopee tokens");
     await refreshShopeeToken();
@@ -38,7 +38,12 @@ const lazadaSecrets = new cronJob(
   "Asia/Manila"
 );
 
-const refresh = { shopeeSecrets, tiktokSecrets, lazadaSecrets };
+const refresh = {
+  shopeeSecrets,
+  tiktokSecrets,
+  lazadaSecrets,
+  refreshLazadaToken,
+};
 
 export default refresh;
 

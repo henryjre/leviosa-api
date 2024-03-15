@@ -45,7 +45,7 @@ export async function catchWebhook(req, res) {
       //   throw new Error("Shopee signature mismatch!");
       // }
 
-      res.status(200).json({ ok: true, message: "success" });
+      await res.status(200).json({ ok: true, message: "success" });
 
       switch (body.code) {
         case 3:
@@ -192,6 +192,10 @@ export async function catchWebhook(req, res) {
               orderData.order_sn,
             ]);
 
+            if (products.length === 0) {
+              return;
+            }
+
             const skuArray = orderData.item_list.map((item) => {
               const itemSku =
                 item.model_sku.length > 0 ? item.model_sku : item.item_sku;
@@ -236,10 +240,6 @@ export async function catchWebhook(req, res) {
 
           await inv_connection.query(deleteOrdersQuery, [orderData.order_sn]);
         } else {
-          const updateQuery =
-            "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-          await inv_connection.query(updateQuery, [status, orderId]);
-
           const selectQuery =
             "SELECT DISCORD_CHANNEL FROM Orders_Shopee WHERE ORDER_ID = ?";
           const [order] = await inv_connection.query(selectQuery, [orderId]);
@@ -247,6 +247,10 @@ export async function catchWebhook(req, res) {
           if (!order.length) {
             return;
           }
+
+          const updateQuery =
+            "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+          await inv_connection.query(updateQuery, [status, orderId]);
 
           const path = "/api/notifications/orders/updateOrderThread";
           const fetchBody = {

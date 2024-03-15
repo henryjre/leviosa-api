@@ -44,7 +44,7 @@ export async function catchWebhook(req, res) {
       //   throw new Error("Tiktok signature mismatch!");
       // }
 
-      res.status(200).json({ ok: true, message: "success" });
+      await res.status(200).json({ ok: true, message: "success" });
 
       switch (body.type) {
         case 1:
@@ -189,6 +189,10 @@ export async function catchWebhook(req, res) {
               orderId,
             ]);
 
+            if (products.length === 0) {
+              return;
+            }
+
             const skuArray = [];
             for (const item of orderData.line_items) {
               const itemIndex = skuArray.findIndex(
@@ -246,10 +250,6 @@ export async function catchWebhook(req, res) {
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);
         } else {
-          const updateQuery =
-            "UPDATE Orders_Tiktok SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-          await inv_connection.query(updateQuery, [status, orderId]);
-
           const selectQuery =
             "SELECT DISCORD_CHANNEL FROM Orders_Tiktok WHERE ORDER_ID = ?";
           const [order] = await inv_connection.query(selectQuery, [orderId]);
@@ -257,6 +257,10 @@ export async function catchWebhook(req, res) {
           if (!order.length) {
             return;
           }
+
+          const updateQuery =
+            "UPDATE Orders_Tiktok SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+          await inv_connection.query(updateQuery, [status, orderId]);
 
           const path = "/api/notifications/orders/updateOrderThread";
           const fetchBody = {

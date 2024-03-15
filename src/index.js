@@ -27,7 +27,8 @@ import notifications from "./jobs/discord_order_notifications.js";
 // REFRESH SCHEDULES
 refresh.shopeeSecrets.start();
 refresh.tiktokSecrets.start();
-refresh.lazadaSecrets.start();
+// refresh.lazadaSecrets.start();
+refresh.refreshLazadaToken();
 
 // SETTLEMENTS SCHEDULES
 settlements.checkShopeeSettlements.start();

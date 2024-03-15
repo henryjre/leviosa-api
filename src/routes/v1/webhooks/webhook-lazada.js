@@ -44,7 +44,7 @@ export async function catchWebhook(req, res) {
       //   throw new Error("Lazada signature mismatch!");
       // }
 
-      res.status(200).json({ ok: true, message: "success" });
+      await res.status(200).json({ ok: true, message: "success" });
 
       switch (body.message_type) {
         case 0:
@@ -201,6 +201,10 @@ export async function catchWebhook(req, res) {
               orderId,
             ]);
 
+            if (products.length === 0) {
+              return;
+            }
+
             const skuArray = [];
             for (const item of orderFetch.data.data) {
               const itemIndex = skuArray.findIndex((i) => i.sku === item.sku);
@@ -255,10 +259,6 @@ export async function catchWebhook(req, res) {
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);
         } else {
-          const updateQuery =
-            "UPDATE Orders_Lazada SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-          await inv_connection.query(updateQuery, [status, orderId]);
-
           const selectQuery =
             "SELECT DISCORD_CHANNEL FROM Orders_Lazada WHERE ORDER_ID = ?";
           const [order] = await inv_connection.query(selectQuery, [orderId]);
@@ -266,6 +266,10 @@ export async function catchWebhook(req, res) {
           if (!order.length) {
             return;
           }
+
+          const updateQuery =
+            "UPDATE Orders_Lazada SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+          await inv_connection.query(updateQuery, [status, orderId]);
 
           const path = "/api/notifications/orders/updateOrderThread";
           const fetchBody = {
