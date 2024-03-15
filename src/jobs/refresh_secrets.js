@@ -42,12 +42,12 @@ const refresh = {
   shopeeSecrets,
   tiktokSecrets,
   lazadaSecrets,
-  refreshLazadaToken,
+  refreshShopeeToken,
 };
 
 export default refresh;
 
-export async function refreshShopeeToken() {
+async function refreshShopeeToken() {
   const host = "https://partner.shopeemobile.com";
   const secretId = process.env.shopee_secrets_id;
 
