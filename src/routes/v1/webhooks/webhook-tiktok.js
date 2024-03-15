@@ -115,13 +115,9 @@ export async function catchWebhook(req, res) {
             counter++;
           }
 
-          const insertPending =
-            "INSERT IGNORE INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
-          await inv_connection.query(insertPending, [pendingItems]);
-
           const insertOrder =
             "INSERT IGNORE INTO Orders_Tiktok (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
-          await inv_connection.query(insertOrder, [
+          const [insert] = await inv_connection.query(insertOrder, [
             orderId,
             status,
             Number(totalReceivables.toFixed(2)),
@@ -129,7 +125,13 @@ export async function catchWebhook(req, res) {
             orderCreatedDate,
           ]);
 
-          await decrementInventory(def_connection, lineItems.products);
+          const insertPending =
+            "INSERT IGNORE INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
+          await inv_connection.query(insertPending, [pendingItems]);
+
+          if (insert.affectedRows !== 0) {
+            await decrementInventory(def_connection, lineItems.products);
+          }
         } else if (status === "CANCEL") {
           const selectOrderQuery =
             "SELECT * FROM Orders_Tiktok WHERE ORDER_ID = ?";
