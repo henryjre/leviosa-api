@@ -13,6 +13,8 @@ import { signTiktokRequest } from "../../../functions/api_sign_functions.js";
 import { botApiPostCall } from "../../../functions/api_request_functions.js";
 
 export async function catchWebhook(req, res) {
+  res.status(200).json({ ok: true, message: "success" });
+
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -30,21 +32,19 @@ export async function catchWebhook(req, res) {
         throw new Error("No secrets found.");
       }
 
-      const receivedSignature = req.headers.authorization;
+      // const receivedSignature = req.headers.authorization;
       const body = req.body;
 
       const secrets = secretsResult[0];
-      const appKey = secrets.APP_KEY;
-      const appSecret = secrets.APP_SECRET;
+      // const appKey = secrets.APP_KEY;
+      // const appSecret = secrets.APP_SECRET;
 
-      const stringToSign = appKey + JSON.stringify(body);
-      const sign = signWebhookRequest(stringToSign, appSecret);
+      // const stringToSign = appKey + JSON.stringify(body);
+      // const sign = signWebhookRequest(stringToSign, appSecret);
 
       // if (sign !== receivedSignature) {
       //   throw new Error("Tiktok signature mismatch!");
       // }
-
-      await res.status(200).json({ ok: true, message: "success" });
 
       switch (body.type) {
         case 1:

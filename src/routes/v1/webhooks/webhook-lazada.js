@@ -15,9 +15,10 @@ import {
 
 const processedLazadaOrders = new Set();
 export async function catchWebhook(req, res) {
+  res.status(200).json({ ok: true, message: "success" });
   try {
     const body = req.body;
-    const auth = req.headers.authorization;
+    // const auth = req.headers.authorization;
     const secretId = process.env.lazada_secrets_id;
 
     const def_connection = await pools.leviosaPool.getConnection();
@@ -35,16 +36,14 @@ export async function catchWebhook(req, res) {
       const secrets = secretsResult[0];
 
       const appKey = secrets.APP_KEY;
-      const secretKey = secrets.APP_SECRET;
+      // const secretKey = secrets.APP_SECRET;
 
-      const stringToSign = appKey + JSON.stringify(body);
-      const sign = signWebhookRequest(stringToSign, secretKey);
+      // const stringToSign = appKey + JSON.stringify(body);
+      // const sign = signWebhookRequest(stringToSign, secretKey);
 
       // if (sign !== auth) {
       //   throw new Error("Lazada signature mismatch!");
       // }
-
-      await res.status(200).json({ ok: true, message: "success" });
 
       switch (body.message_type) {
         case 0:

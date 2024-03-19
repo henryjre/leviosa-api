@@ -14,6 +14,8 @@ import {
 } from "../../../functions/api_request_functions.js";
 
 export async function catchWebhook(req, res) {
+  res.status(200).json({ ok: true, message: "success" });
+
   const secretId = process.env.shopee_secrets_id;
 
   try {
@@ -32,20 +34,18 @@ export async function catchWebhook(req, res) {
 
       const secrets = secretsResult[0];
 
-      const receivedSignature = req.get("Authorization");
+      // const receivedSignature = req.get("Authorization");
       const body = req.body;
 
-      const url =
-        "https://jellyfish-app-yevob.ondigitalocean.app/api/v1/webhooks/shopee";
-      const responseContent = JSON.stringify(body);
-      const partnerKey = secrets.APP_KEY;
-      const sign = signWebhookRequest(url, responseContent, partnerKey);
+      // const url =
+      //   "https://jellyfish-app-yevob.ondigitalocean.app/api/v1/webhooks/shopee";
+      // const responseContent = JSON.stringify(body);
+      // const partnerKey = secrets.APP_KEY;
+      // const sign = signWebhookRequest(url, responseContent, partnerKey);
 
       // if (sign !== receivedSignature) {
       //   throw new Error("Shopee signature mismatch!");
       // }
-
-      await res.status(200).json({ ok: true, message: "success" });
 
       switch (body.code) {
         case 3:
