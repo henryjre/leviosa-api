@@ -63,6 +63,19 @@ export async function catchWebhook(req, res) {
         await mgmt_connection.query(updateLiveStreamOrders, [status, orderId]);
 
         if (status === "AWAITING_SHIPMENT") {
+          const selectOrderQuery =
+            "SELECT * FROM Orders_Tiktok WHERE ORDER_ID = ?";
+          const [order] = await inv_connection.query(selectOrderQuery, [
+            orderId,
+          ]);
+
+          if (order.length > 0) {
+            console.log(
+              `Tiktok order #${orderId} is already in database. Ignoring...`
+            );
+            return;
+          }
+
           const orderFetch = await getOrderDetail(secrets, orderId);
           if (!orderFetch.ok) {
             console.log(orderFetch);
@@ -141,7 +154,7 @@ export async function catchWebhook(req, res) {
 
           if (order.length <= 0) {
             console.log(
-              `Cancelled Shopee order #${orderId} not found in database. Ignoring...`
+              `Cancelled Tiktok order #${orderId} not found in database. Ignoring...`
             );
             return;
           }

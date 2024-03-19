@@ -60,6 +60,19 @@ export async function catchWebhook(req, res) {
         const orderId = body.data.ordersn;
 
         if (status === "UNPAID") {
+          const selectOrderQuery =
+            "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
+          const [order] = await inv_connection.query(selectOrderQuery, [
+            orderId,
+          ]);
+
+          if (order.length > 0) {
+            console.log(
+              `Shopee order #${orderId} is already in database. Ignoring...`
+            );
+            return;
+          }
+
           const orderFetch = await getOrderDetail(secrets, orderId);
           if (!orderFetch.ok) {
             console.log(orderFetch);
