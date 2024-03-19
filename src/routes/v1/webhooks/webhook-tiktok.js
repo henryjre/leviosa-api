@@ -262,7 +262,7 @@ export async function catchWebhook(req, res) {
           }
 
           await inv_connection.query(deleteOrdersQuery, [orderId]);
-        } else {
+        } else if (status !== "UNPAID") {
           const selectQuery =
             "SELECT DISCORD_CHANNEL FROM Orders_Tiktok WHERE ORDER_ID = ?";
           const [order] = await inv_connection.query(selectQuery, [orderId]);
