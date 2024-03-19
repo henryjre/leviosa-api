@@ -280,7 +280,7 @@ async function checkForLazadaSettlements() {
 
         const totalSettledAmount =
           Number(totalItemPriceCredit.toFixed(2)) -
-          Number(totalFees.toFixed(2));
+          Number(totalSettlementFees.toFixed(2));
 
         toSettleOrders.push({
           orderId: order.ORDER_ID,

@@ -42,7 +42,7 @@ const refresh = {
   shopeeSecrets,
   tiktokSecrets,
   lazadaSecrets,
-  refreshShopeeToken,
+  refreshTiktokToken,
 };
 
 export default refresh;
