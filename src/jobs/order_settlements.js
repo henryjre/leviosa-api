@@ -47,6 +47,9 @@ export default {
   checkLazadaSettlements,
   checkTiktokSettlements,
   checkShopeeSettlements,
+  checkForLazadaSettlements,
+  checkForShopeeSettlements,
+  checkForTiktokSettlements,
 };
 
 //FOR TIKTOK SETTLEMENTS

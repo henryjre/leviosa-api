@@ -42,6 +42,8 @@ const refresh = {
   shopeeSecrets,
   tiktokSecrets,
   lazadaSecrets,
+  refreshShopeeToken,
+  refreshLazadaToken,
   refreshTiktokToken,
 };
 
