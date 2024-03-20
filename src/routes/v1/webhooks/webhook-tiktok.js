@@ -194,7 +194,7 @@ export async function catchWebhook(req, res) {
           await inv_connection.query(insertOrdersQuery, [orderId]);
 
           const updateQuery =
-            "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+            "UPDATE Orders_Tiktok SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
           await inv_connection.query(updateQuery, [cancelStatus, orderId]);
 
           if (cancelStatus === "CANCELLED") {

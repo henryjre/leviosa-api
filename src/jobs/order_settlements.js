@@ -204,8 +204,8 @@ async function checkForLazadaSettlements() {
       let endDate = moment().tz("Asia/Manila");
 
       for (const order of settledOrders) {
-        const createdDate = moment(order.CREATED_DATE).tz("Asia/Manila");
-        const deliveredDate = moment(order.CREATED_DATE).tz("Asia/Manila");
+        const createdDate = moment(order.CREATED_DATE);
+        const deliveredDate = moment(order.CREATED_DATE);
 
         if (deliveredDate.isBefore(endDate)) {
           endDate = deliveredDate;
