@@ -11,7 +11,7 @@ import {
 const cronJob = cron.CronJob;
 
 const checkLazadaSettlements = new cronJob(
-  "20 */1 * * *",
+  "20 */4 * * *",
   async () => {
     console.log("Checking for Lazada order settlements...");
     await checkForLazadaSettlements();
@@ -22,7 +22,7 @@ const checkLazadaSettlements = new cronJob(
 );
 
 const checkShopeeSettlements = new cronJob(
-  "10 */1 * * *",
+  "10 */4 * * *",
   async () => {
     console.log("Checking for Shopee order settlements...");
     await checkForShopeeSettlements();
@@ -148,6 +148,7 @@ async function checkForTiktokSettlements() {
           .map((order) => `'${order.orderId}'`)
           .join(", ")});`;
       await inv_connection.query(updateOrders);
+      console.log("TIKTOK ORDERS WERE SETTLED")
 
       //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
       //   await inv_connection.query(inserSettlement, valuesToInsert);
@@ -318,6 +319,8 @@ async function checkForLazadaSettlements() {
         .map((order) => `'${order.orderId}'`)
         .join(", ")});`;
       await inv_connection.query(updateOrders);
+
+      console.log("LAZADA ORDERS WERE SETTLED")
     } finally {
       def_connection.release();
       inv_connection.release();
@@ -416,6 +419,8 @@ async function checkForShopeeSettlements() {
         .map((order) => `'${order.orderId}'`)
         .join(", ")});`;
       await inv_connection.query(updateOrders);
+
+      console.log("SHOPEE ORDERS WERE SETTLED")
     } finally {
       def_connection.release();
       inv_connection.release();
