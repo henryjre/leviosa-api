@@ -129,7 +129,7 @@ export async function catchWebhook(req, res) {
           }
 
           const insertOrder =
-            "INSERT IGNORE INTO Orders_Tiktok (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
+            "INSERT INTO Orders_Tiktok (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
           const [insert] = await inv_connection.query(insertOrder, [
             orderId,
             status,
@@ -139,7 +139,7 @@ export async function catchWebhook(req, res) {
           ]);
 
           const insertPending =
-            "INSERT IGNORE INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
+            "INSERT INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
           await inv_connection.query(insertPending, [pendingItems]);
 
           if (insert.affectedRows !== 0) {
@@ -176,7 +176,7 @@ export async function catchWebhook(req, res) {
 
           let deleteOrdersQuery, insertOrdersQuery, cancelStatus;
           if (orderData.cancel_reason === "Package delivery failed") {
-            insertOrdersQuery = `INSERT IGNORE INTO Pending_Inventory_In (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS)
+            insertOrdersQuery = `INSERT INTO Pending_Inventory_In (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS)
             SELECT ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS
             FROM Completed_Inventory_Out
             WHERE ORDER_ID = ?`;
@@ -185,7 +185,7 @@ export async function catchWebhook(req, res) {
             cancelStatus = "RTS";
           } else {
             insertOrdersQuery =
-              "INSERT IGNORE INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
+              "INSERT INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
             deleteOrdersQuery =
               "DELETE FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
             cancelStatus = "CANCELLED";
