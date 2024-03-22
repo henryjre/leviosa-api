@@ -142,7 +142,7 @@ async function orderStatusChange(
     }
 
     const insertOrder =
-      "INSERT INTO Orders_Shopee (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
+      "INSERT IGNORE INTO Orders_Shopee (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
     const [insert] = await inv_connection.query(insertOrder, [
       orderData.order_sn,
       status,
@@ -152,12 +152,15 @@ async function orderStatusChange(
     ]);
 
     const insertPending =
-      "INSERT INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
+      "INSERT IGNORE INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
     await inv_connection.query(insertPending, [pendingItems]);
 
     if (insert.affectedRows !== 0) {
       await decrementInventory(def_connection, lineItems.products);
     }
+
+    console.log(`Pending Shopee order #${orderId} recorded!`);
+    return;
   } else if (status === "CANCELLED") {
     const selectOrderQuery = "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
@@ -250,9 +253,6 @@ async function orderStatusChange(
           });
         }
         await incrementInventoryAndCost(def_connection, toUpdate);
-
-        console.log(`Pending Shopee order #${orderId} recorded!`);
-        return;
       }
     }
 
