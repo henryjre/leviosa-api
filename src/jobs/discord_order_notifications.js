@@ -9,7 +9,7 @@ const cronJob = cron.CronJob;
 const path = "/api/notifications/orders/createOrderThread";
 
 const discordNotificationsJob = new cronJob(
-  "30 * * * *",
+  "0 */1 * * *",
   async () => {
     console.log("Running shopee discord notifications...");
     await shopeeOrderNotif();

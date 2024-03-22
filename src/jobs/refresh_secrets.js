@@ -6,7 +6,7 @@ const cronJob = cron.CronJob;
 
 //Refresh shopee secrets every 4 hours
 const shopeeSecrets = new cronJob(
-  "40 */3 * * *",
+  "0 */3 * * *",
   async () => {
     console.log("Refreshing shopee tokens");
     await refreshShopeeToken();
