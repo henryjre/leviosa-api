@@ -16,7 +16,6 @@ export async function catchWebhook(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    await res.status(200).json({ ok: true, message: "success" });
     const def_connection = await pools.leviosaPool.getConnection();
     const inv_connection = await pools.inventoryPool.getConnection();
     const mgmt_connection = await pools.managementPool.getConnection();
@@ -47,16 +46,16 @@ export async function catchWebhook(req, res) {
 
       switch (body.type) {
         case 1:
-          await orderStatusChange(
+          return await orderStatusChange(
             body,
             secrets,
             def_connection,
             inv_connection,
-            mgmt_connection
+            mgmt_connection,
+            res
           );
-          break;
         default:
-          break;
+          return res.status(200).json({ ok: true, message: "success" });
       }
     } finally {
       def_connection.release();
@@ -65,7 +64,7 @@ export async function catchWebhook(req, res) {
     }
   } catch (error) {
     console.log(error.toString());
-    return res.status(401).json({ ok: false, message: "unauthorized" });
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
@@ -74,7 +73,8 @@ async function orderStatusChange(
   secrets,
   def_connection,
   inv_connection,
-  mgmt_connection
+  mgmt_connection,
+  res
 ) {
   const status = body.data.order_status;
   const orderId = body.data.order_id;
@@ -91,13 +91,13 @@ async function orderStatusChange(
       console.log(
         `Tiktok order #${orderId} is already in database. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
     if (!orderFetch.ok) {
       console.log(orderFetch);
-      return;
+      return res.status(400).json({ ok: false, message: "fail" });
     }
 
     const orderData = orderFetch.data.data.orders[0];
@@ -162,7 +162,7 @@ async function orderStatusChange(
     }
 
     console.log(`Pending Tiktok order #${orderId} recorded!`);
-    return;
+    return res.status(200).json({ ok: true, message: "success" });
   } else if (status === "CANCEL") {
     const selectOrderQuery = "SELECT * FROM Orders_Tiktok WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
@@ -171,20 +171,20 @@ async function orderStatusChange(
       console.log(
         `Cancelled Tiktok order #${orderId} not found in database. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     if (["RTS", "CANCELLED"].includes(order[0].ORDER_STATUS)) {
       console.log(
         `Cancelled Shopee order #${orderId} is already recorded. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
     if (!orderFetch.ok) {
       console.log(orderFetch);
-      return;
+      return res.status(400).json({ ok: false, message: "fail" });
     }
 
     const orderData = orderFetch.data.data.orders[0];
@@ -276,7 +276,7 @@ async function orderStatusChange(
     const [order] = await inv_connection.query(selectQuery, [orderId]);
 
     if (!order.length) {
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const updateQuery =
@@ -290,6 +290,7 @@ async function orderStatusChange(
       platform: "TIKTOK",
     };
     await botApiPostCall(fetchBody, path);
+    return res.status(200).json({ ok: true, message: "success" });
   }
 }
 

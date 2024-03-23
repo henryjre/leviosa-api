@@ -16,7 +16,6 @@ import {
 const processedLazadaOrders = new Set();
 export async function catchWebhook(req, res) {
   try {
-    await res.status(200).json({ ok: true, message: "success" });
     const body = req.body;
     // const auth = req.headers.authorization;
     const secretId = process.env.lazada_secrets_id;
@@ -47,15 +46,15 @@ export async function catchWebhook(req, res) {
 
       switch (body.message_type) {
         case 0:
-          await orderStatusChange(
+          return await orderStatusChange(
             body,
             secrets,
             def_connection,
-            inv_connection
+            inv_connection,
+            res
           );
-          break;
         default:
-          break;
+          return res.status(200).json({ ok: true, message: "success" });
       }
     } finally {
       def_connection.release();
@@ -63,7 +62,7 @@ export async function catchWebhook(req, res) {
     }
   } catch (error) {
     console.error(error.toString());
-    return res.status(404).json({ ok: false, message: error.toString() });
+    return res.status(400).json({ ok: false, message: error.toString() });
   }
 }
 
@@ -71,7 +70,8 @@ async function orderStatusChange(
   body,
   secrets,
   def_connection,
-  inv_connection
+  inv_connection,
+  res
 ) {
   const status = body.data.order_status;
   const orderId = body.data.trade_order_id;
@@ -79,14 +79,14 @@ async function orderStatusChange(
 
   if (status === "unpaid") {
     console.log(`Unpaid Lazada order received: ${checkDupeId}. Ignoring...`);
-    return;
+    return res.status(200).json({ ok: true, message: "success" });
   }
 
   if (processedLazadaOrders.has(checkDupeId)) {
     console.log(
       `Duplicate Lazada order push received: ${checkDupeId}. Ignoring...`
     );
-    return;
+    return res.status(200).json({ ok: true, message: "success" });
   }
 
   processedLazadaOrders.add(checkDupeId);
@@ -99,13 +99,13 @@ async function orderStatusChange(
       console.log(
         `Lazada order #${orderId} is already in database. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
     if (!orderFetch.ok) {
       console.log(orderFetch);
-      return;
+      return res.status(400).json({ ok: false, message: "fail" });
     }
 
     const skuArray = orderFetch.data.data.map((item) => ({
@@ -171,7 +171,7 @@ async function orderStatusChange(
     }
 
     console.log(`Pending Lazada order #${orderId} recorded!`);
-    return;
+    return res.status(200).json({ ok: true, message: "success" });
   } else if (["canceled", "shipped_back"].includes(status)) {
     const selectOrderQuery = "SELECT * FROM Orders_Lazada WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
@@ -180,20 +180,20 @@ async function orderStatusChange(
       console.log(
         `Cancelled Lazada order #${orderId} not found in database. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     if (["RTS", "CANCELLED"].includes(order[0].ORDER_STATUS)) {
       console.log(
         `Cancelled Lazada order #${orderId} is already recorded. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
     if (!orderFetch.ok) {
       console.log(orderFetch);
-      return;
+      return res.status(400).json({ ok: true, message: "success" });
     }
 
     let deleteOrdersQuery, insertOrdersQuery, cancelStatus;
@@ -272,13 +272,14 @@ async function orderStatusChange(
     }
 
     await inv_connection.query(deleteOrdersQuery, [orderId]);
+    return res.status(200).json({ ok: true, message: "success" });
   } else {
     const selectQuery =
       "SELECT DISCORD_CHANNEL FROM Orders_Lazada WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectQuery, [orderId]);
 
     if (!order.length) {
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const updateQuery =
@@ -292,6 +293,7 @@ async function orderStatusChange(
       platform: "LAZADA",
     };
     await botApiPostCall(fetchBody, path);
+    return res.status(200).json({ ok: true, message: "success" });
   }
 }
 

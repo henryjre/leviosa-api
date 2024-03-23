@@ -17,7 +17,6 @@ export async function catchWebhook(req, res) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    await res.status(200).json({ ok: true, message: "success" });
     const def_connection = await pools.leviosaPool.getConnection();
     const inv_connection = await pools.inventoryPool.getConnection();
 
@@ -48,15 +47,15 @@ export async function catchWebhook(req, res) {
 
       switch (parseInt(body.code)) {
         case 3:
-          await orderStatusChange(
+          return await orderStatusChange(
             body,
             secrets,
             def_connection,
-            inv_connection
+            inv_connection,
+            res
           );
-          break;
         default:
-          break;
+          return res.status(200).json({ ok: true, message: "success" });
       }
     } finally {
       def_connection.release();
@@ -64,7 +63,8 @@ export async function catchWebhook(req, res) {
     }
   } catch (error) {
     console.log(error.toString());
-    return res.status(401).json({ ok: false, message: "unauthorized" });
+
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
@@ -72,7 +72,8 @@ async function orderStatusChange(
   body,
   secrets,
   def_connection,
-  inv_connection
+  inv_connection,
+  res
 ) {
   const status = body.data.status;
   const orderId = body.data.ordersn;
@@ -85,13 +86,13 @@ async function orderStatusChange(
       console.log(
         `Shopee order #${orderId} is already in database. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
     if (!orderFetch.ok) {
       console.log(orderFetch);
-      return;
+      return res.status(400).json({ ok: false, message: "fail" });
     }
 
     const orderData = orderFetch.data.response.order_list[0];
@@ -159,7 +160,7 @@ async function orderStatusChange(
     }
 
     console.log(`Pending Shopee order #${orderId} recorded!`);
-    return;
+    return res.status(200).json({ ok: true, message: "success" });
   } else if (status === "CANCELLED") {
     const selectOrderQuery = "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
@@ -168,20 +169,20 @@ async function orderStatusChange(
       console.log(
         `Cancelled Shopee order #${orderId} not found in database. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     if (["RTS", "CANCELLED"].includes(order[0].ORDER_STATUS)) {
       console.log(
         `Cancelled Shopee order #${orderId} is already recorded. Ignoring...`
       );
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
     if (!orderFetch.ok) {
       console.log(orderFetch);
-      return;
+      return res.status(400).json({ ok: false, message: "fail" });
     }
 
     const orderData = orderFetch.data.response.order_list[0];
@@ -256,13 +257,15 @@ async function orderStatusChange(
     }
 
     await inv_connection.query(deleteOrdersQuery, [orderData.order_sn]);
+
+    return res.status(200).json({ ok: true, message: "success" });
   } else {
     const selectQuery =
       "SELECT DISCORD_CHANNEL FROM Orders_Shopee WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectQuery, [orderId]);
 
     if (!order.length) {
-      return;
+      return res.status(200).json({ ok: true, message: "success" });
     }
 
     const updateQuery =
@@ -276,6 +279,8 @@ async function orderStatusChange(
       platform: "SHOPEE",
     };
     await botApiPostCall(fetchBody, path);
+
+    return res.status(200).json({ ok: true, message: "success" });
   }
 }
 
