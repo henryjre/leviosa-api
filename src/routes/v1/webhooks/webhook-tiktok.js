@@ -190,8 +190,13 @@ async function orderStatusChange(
     const orderData = orderFetch.data.data.orders[0];
 
     let deleteOrdersQuery, insertOrdersQuery, cancelStatus;
-    if (orderData.cancel_reason === "Package delivery failed") {
-      insertOrdersQuery = `INSERT INTO Pending_Inventory_In (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS)
+
+    if (
+      ["Package delivery failed", "包裹送达失败"].includes(
+        orderData.cancel_reason
+      )
+    ) {
+      insertOrdersQuery = `INSERT IGNORE INTO Pending_Inventory_In (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS)
       SELECT ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS
       FROM Completed_Inventory_Out
       WHERE ORDER_ID = ?`;
@@ -200,7 +205,7 @@ async function orderStatusChange(
       cancelStatus = "RTS";
     } else {
       insertOrdersQuery =
-        "INSERT INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
+        "INSERT IGNORE INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
       deleteOrdersQuery =
         "DELETE FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
       cancelStatus = "CANCELLED";

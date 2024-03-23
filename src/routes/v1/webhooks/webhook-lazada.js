@@ -153,7 +153,7 @@ async function orderStatusChange(
     }
 
     const insertOrder =
-      "INSERT INTO Orders_Lazada (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
+      "INSERT IGNORE INTO Orders_Lazada (ORDER_ID, ORDER_STATUS, RECEIVABLES_AMOUNT, TOTAL_COST, CREATED_DATE) VALUES (?, ?, ?, ?, ?)";
     const [insert] = await inv_connection.query(insertOrder, [
       orderId,
       status,
@@ -163,7 +163,7 @@ async function orderStatusChange(
     ]);
 
     const insertPending =
-      "INSERT INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
+      "INSERT IGNORE INTO Pending_Inventory_Out (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS) VALUES ?";
     await inv_connection.query(insertPending, [pendingItems]);
 
     if (insert.affectedRows !== 0) {
@@ -199,12 +199,12 @@ async function orderStatusChange(
     let deleteOrdersQuery, insertOrdersQuery, cancelStatus;
     if (status === "canceled") {
       insertOrdersQuery =
-        "INSERT INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
+        "INSERT IGNORE INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
       deleteOrdersQuery =
         "DELETE FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
       cancelStatus = "CANCELLED";
     } else {
-      insertOrdersQuery = `INSERT INTO Pending_Inventory_In (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS)
+      insertOrdersQuery = `INSERT IGNORE INTO Pending_Inventory_In (ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS)
       SELECT ID, ORDER_ID, PRODUCT_SKU, PRODUCT_NAME, ORDER_CREATED, PLATFORM, PRODUCT_COGS
       FROM Completed_Inventory_Out
       WHERE ORDER_ID = ?`;
