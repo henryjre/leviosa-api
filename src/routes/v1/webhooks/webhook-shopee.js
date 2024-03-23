@@ -14,11 +14,10 @@ import {
 } from "../../../functions/api_request_functions.js";
 
 export async function catchWebhook(req, res) {
-  res.status(200).json({ ok: true, message: "success" });
-
   const secretId = process.env.shopee_secrets_id;
 
   try {
+    await res.status(200).json({ ok: true, message: "success" });
     const def_connection = await pools.leviosaPool.getConnection();
     const inv_connection = await pools.inventoryPool.getConnection();
 

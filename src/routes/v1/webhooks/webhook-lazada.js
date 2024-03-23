@@ -15,8 +15,8 @@ import {
 
 const processedLazadaOrders = new Set();
 export async function catchWebhook(req, res) {
-  res.status(200).json({ ok: true, message: "success" });
   try {
+    await res.status(200).json({ ok: true, message: "success" });
     const body = req.body;
     // const auth = req.headers.authorization;
     const secretId = process.env.lazada_secrets_id;
