@@ -270,6 +270,8 @@ async function orderStatusChange(
     }
 
     await inv_connection.query(deleteOrdersQuery, [orderId]);
+
+    return res.status(200).json({ ok: true, message: "success" });
   } else if (status !== "UNPAID") {
     const selectQuery =
       "SELECT DISCORD_CHANNEL FROM Orders_Tiktok WHERE ORDER_ID = ?";
