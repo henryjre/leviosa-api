@@ -40,3 +40,17 @@ export async function getTiktokOrdersDetails(secrets, orderIds) {
 
   return tiktokGetAPIRequest(secrets, path, queryParams);
 }
+
+export async function getTiktokOrderList(secrets, start_time, end_time) {
+  const path = "/order/202309/orders/search";
+  const params = {
+    page_size: 100,
+  };
+  const payload = {
+    order_status: "AWAITING_SHIPMENT",
+    create_time_ge: start_time,
+    create_time_lt: end_time,
+  };
+
+  return tiktokPostAPIRequest(secrets, path, payload, params);
+}

@@ -35,3 +35,13 @@ export async function getMultipleLazOrders(secrets, orderIds) {
   const params = { order_ids: JSON.stringify(orderIds) };
   return lazadaGetAPIRequest(secrets, path, params);
 }
+
+export async function getLazadaOrderList(secrets, start_time, end_time) {
+  const path = "/orders/get";
+  const params = {
+    created_before: end_time,
+    created_after: start_time,
+    status: "pending",
+  };
+  return lazadaGetAPIRequest(secrets, path, params);
+}

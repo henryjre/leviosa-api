@@ -121,9 +121,7 @@ async function orderStatusChange(
     const orderCreatedDate = moment(
       orderFetch.data.data[0].created_at,
       "YYYY-MM-DD HH:mm:ss ZZ"
-    )
-      .tz("Asia/Manila")
-      .format("YYYY-MM-DD HH:mm:ss");
+    ).format("YYYY-MM-DD HH:mm:ss");
 
     const lineItems = await queryProductsPlacement(def_connection, skuArray);
 

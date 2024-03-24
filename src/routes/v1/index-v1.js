@@ -4,6 +4,7 @@ import { authenticate } from "../../auth.js";
 
 import webhooks from "./webhooks/index-webhook.js";
 import inventory from "./inventory/index-inventory.js";
+import orders from "./orders/index-orders.js";
 
 v1.get("/webhooks", (req, res) => {
   return res
@@ -13,6 +14,9 @@ v1.get("/webhooks", (req, res) => {
 
 // "/api/v1/webhook"
 v1.use("/webhooks", webhooks);
+
+// "/api/v1/orders"
+v1.use("/orders", orders);
 
 // "/api/v1/inventory"
 v1.use("/inventory", authenticate, inventory);

@@ -111,7 +111,6 @@ async function orderStatusChange(
 
     const orderCreatedDate = moment
       .unix(orderData.create_time)
-      .tz("Asia/Manila")
       .format("YYYY-MM-DD HH:mm:ss");
 
     const lineItems = await queryProductsPlacement(def_connection, skuArray);
