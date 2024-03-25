@@ -46,13 +46,13 @@ export async function getPendingTiktokOrders(req, res) {
         );
       }
 
-      const tiktokOrdersResult = tiktokOrdersFetch.data.data.orders;
-
-      if (tiktokOrdersResult.length <= 0) {
+      if (tiktokOrdersFetch.data.data.total_count === 0) {
         return res
           .status(200)
           .json({ ok: true, message: "No pending orders found." });
       }
+
+      const tiktokOrdersResult = tiktokOrdersFetch.data.data.orders;
 
       const selectQuery = `
         SELECT ORDER_ID FROM Orders_Tiktok
