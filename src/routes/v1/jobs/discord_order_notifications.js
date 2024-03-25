@@ -20,7 +20,7 @@ export async function runDiscordNotifs(req, res) {
   }
 }
 
-async function shopeeOrderNotif(req, res) {
+async function shopeeOrderNotif() {
   const secretId = process.env.shopee_secrets_id;
 
   try {
@@ -89,17 +89,15 @@ async function shopeeOrderNotif(req, res) {
     .join(", ")});
 `;
       await inv_connection.query(updateQuery);
-      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
-    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
-async function lazadaOrderNotif(req, res) {
+async function lazadaOrderNotif() {
   const secretId = process.env.lazada_secrets_id;
 
   try {
@@ -168,17 +166,15 @@ async function lazadaOrderNotif(req, res) {
     .join(", ")});
 `;
       await inv_connection.query(updateQuery);
-      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
-    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
-async function tiktokOrderNotif(req, res) {
+async function tiktokOrderNotif() {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -202,7 +198,6 @@ async function tiktokOrderNotif(req, res) {
 
       if (!tiktokOrdersDb.length) {
         console.log("No tiktok orders for new discord notification");
-        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const orderIds = tiktokOrdersDb.map((o) => o.ORDER_ID);
@@ -254,12 +249,10 @@ async function tiktokOrderNotif(req, res) {
     .join(", ")});
 `;
       await inv_connection.query(updateQuery);
-      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
-    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
