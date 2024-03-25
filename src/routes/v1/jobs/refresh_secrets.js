@@ -1,42 +1,5 @@
-import * as cron from "cron";
 import crypto from "crypto";
 import pools from "../../../sqlPools.js";
-
-const cronJob = cron.CronJob;
-
-//Refresh shopee secrets every 4 hours
-const shopeeSecrets = new cronJob(
-  "0 */3 * * *",
-  async () => {
-    console.log("Refreshing shopee tokens");
-    await refreshShopeeToken();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
-
-const tiktokSecrets = new cronJob(
-  "0 0 */5 * *",
-  async () => {
-    console.log("Refreshing tiktok tokens");
-    await refreshTiktokToken();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
-
-const lazadaSecrets = new cronJob(
-  "0 0 */29 * *",
-  async () => {
-    console.log("Refreshing tiktok tokens");
-    await refreshLazadaToken();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
 
 export {
   sampleJob,
@@ -51,6 +14,7 @@ async function sampleJob(req, res) {
 }
 
 async function refreshShopeeToken(req, res) {
+  console.log("Refreshing shopee tokens");
   const host = "https://partner.shopeemobile.com";
   const secretId = process.env.shopee_secrets_id;
 
@@ -137,6 +101,7 @@ async function refreshShopeeToken(req, res) {
 }
 
 async function refreshTiktokToken(req, res) {
+  console.log("Refreshing tiktok tokens");
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -191,6 +156,7 @@ async function refreshTiktokToken(req, res) {
 }
 
 async function refreshLazadaToken(req, res) {
+  console.log("Refreshing lazada tokens");
   const apiUrl = "https://auth.lazada.com/rest";
   const secretId = process.env.lazada_secrets_id;
 

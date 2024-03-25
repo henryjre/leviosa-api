@@ -4,25 +4,7 @@ import { getShopeeOrders } from "../../../functions/shopee.js";
 import { getTiktokOrdersDetails } from "../../../functions/tiktok.js";
 import pools from "../../../sqlPools.js";
 
-import * as cron from "cron";
-
-const cronJob = cron.CronJob;
 const path = "/api/notifications/orders/createOrderThread";
-
-const discordNotificationsJob = new cronJob(
-  "0 */1 * * *",
-  async () => {
-    console.log("Running shopee discord notifications...");
-    await shopeeOrderNotif();
-    console.log("Running lazada discord notifications...");
-    await lazadaOrderNotif();
-    console.log("Running tiktok discord notifications...");
-    await tiktokOrderNotif();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
 
 export async function runDiscordNotifs() {
   console.log("Running shopee discord notifications...");

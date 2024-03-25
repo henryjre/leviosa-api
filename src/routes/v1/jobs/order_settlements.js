@@ -1,4 +1,3 @@
-import * as cron from "cron";
 import moment from "moment-timezone";
 
 import {
@@ -7,41 +6,6 @@ import {
   tiktokGetAPIRequest,
 } from "../../../functions/api_request_functions.js";
 import pools from "../../../sqlPools.js";
-
-const cronJob = cron.CronJob;
-
-const checkLazadaSettlements = new cronJob(
-  "20 */4 * * *",
-  async () => {
-    console.log("Checking for Lazada order settlements...");
-    await checkForLazadaSettlements();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
-
-const checkShopeeSettlements = new cronJob(
-  "10 */4 * * *",
-  async () => {
-    console.log("Checking for Shopee order settlements...");
-    await checkForShopeeSettlements();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
-
-const checkTiktokSettlements = new cronJob(
-  "30 8 * * *",
-  async () => {
-    console.log("Checking for Tiktok order settlements...");
-    await checkForTiktokSettlements();
-  },
-  null,
-  false,
-  "Asia/Manila"
-);
 
 export {
   checkForLazadaSettlements,
