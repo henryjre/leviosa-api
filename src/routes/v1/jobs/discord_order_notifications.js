@@ -6,13 +6,18 @@ import pools from "../../../sqlPools.js";
 
 const path = "/api/notifications/orders/createOrderThread";
 
-export async function runDiscordNotifs() {
-  console.log("Running shopee discord notifications...");
-  await shopeeOrderNotif();
-  console.log("Running lazada discord notifications...");
-  await lazadaOrderNotif();
-  console.log("Running tiktok discord notifications...");
-  await tiktokOrderNotif();
+export async function runDiscordNotifs(req, res) {
+  try {
+    console.log("Running shopee discord notifications...");
+    await shopeeOrderNotif();
+    console.log("Running lazada discord notifications...");
+    await lazadaOrderNotif();
+    console.log("Running tiktok discord notifications...");
+    await tiktokOrderNotif();
+    return res.status(200).json({ ok: true, message: "success" });
+  } catch (error) {
+    return res.status(400).json({ ok: false, message: "fail" });
+  }
 }
 
 async function shopeeOrderNotif(req, res) {
