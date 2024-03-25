@@ -1,17 +1,17 @@
+import pools from "../../../sqlPools.js";
 import {
   getLazadaProductsInfo,
   getUpdateLazadaProductStock,
-} from "../functions/lazada.js";
+} from "../../../functions/lazada.js";
 import {
   getShopeeProductsInfo,
   postUpdateShopeeProductStock,
   searchShopeeProduct,
-} from "../functions/shopee.js";
+} from "../../../functions/shopee.js";
 import {
   getTiktokProductsInfo,
   postUpdateTiktokProductStock,
-} from "../functions/tiktok.js";
-import pools from "../sqlPools.js";
+} from "../../../functions/tiktok.js";
 
 // DEDUCT SHOPEE PRODUCTS
 export async function changeShopeeInventory(type) {

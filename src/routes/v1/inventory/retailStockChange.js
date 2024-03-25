@@ -1,4 +1,4 @@
-import * as deduction from "../../../jobs/retail_stock_change.js";
+import * as deduction from "../jobs/retail_stock_change.js";
 import pools from "../../../sqlPools.js";
 
 export async function deductRetailInventory(req, res) {

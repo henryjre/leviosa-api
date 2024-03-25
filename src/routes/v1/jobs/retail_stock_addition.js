@@ -1,5 +1,5 @@
-import { searchShopeeProduct } from "../functions/shopee.js";
-import pools from "../sqlPools.js";
+import { searchShopeeProduct } from "../../../functions/shopee.js";
+import pools from "../../../sqlPools.js";
 
 export async function addShopeeInventory() {
   const secretId = process.env.shopee_secrets_id;

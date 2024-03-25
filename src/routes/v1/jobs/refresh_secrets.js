@@ -1,6 +1,6 @@
 import * as cron from "cron";
 import crypto from "crypto";
-import pools from "../sqlPools.js";
+import pools from "../../../sqlPools.js";
 
 const cronJob = cron.CronJob;
 
@@ -38,18 +38,19 @@ const lazadaSecrets = new cronJob(
   "Asia/Manila"
 );
 
-const refresh = {
-  shopeeSecrets,
-  tiktokSecrets,
-  lazadaSecrets,
+export {
+  sampleJob,
   refreshShopeeToken,
   refreshLazadaToken,
   refreshTiktokToken,
 };
 
-export default refresh;
+async function sampleJob(req, res) {
+  console.log("sample job running");
+  return res.status(200).json({ ok: true, message: "success" });
+}
 
-async function refreshShopeeToken() {
+async function refreshShopeeToken(req, res) {
   const host = "https://partner.shopeemobile.com";
   const secretId = process.env.shopee_secrets_id;
 
@@ -112,17 +113,17 @@ async function refreshShopeeToken() {
           secretId,
         ]);
         console.log("SHOPEE SECRETS UPDATED", response);
-        return { ok: true, order: response };
+        return res.status(200).json({ ok: true, message: "success" });
       } else {
         console.log("SHOPEE SECRETS ERROR", response);
-        return { ok: false, order: response };
+        return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
       connection.release();
     }
   } catch (error) {
     console.log("SHOPEE SECRETS ERROR", error);
-    return;
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 
   function signRequest(input, partnerKey) {
@@ -135,7 +136,7 @@ async function refreshShopeeToken() {
   }
 }
 
-async function refreshTiktokToken() {
+async function refreshTiktokToken(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -175,21 +176,21 @@ async function refreshTiktokToken() {
           secretId,
         ]);
         console.log("TIKTOK SECRETS UPDATED", response);
-        return { ok: true, order: response };
+        return res.status(200).json({ ok: true, message: "success" });
       } else {
         console.log("TIKTOK SECRETS ERROR", response);
-        return { ok: false, order: response };
+        return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
       connection.release();
     }
   } catch (error) {
     console.log("TIKTOK SECRETS ERROR", error);
-    return;
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
-async function refreshLazadaToken() {
+async function refreshLazadaToken(req, res) {
   const apiUrl = "https://auth.lazada.com/rest";
   const secretId = process.env.lazada_secrets_id;
 
@@ -241,17 +242,17 @@ async function refreshLazadaToken() {
           secretId,
         ]);
         console.log("LAZADA SECRETS UPDATED", response);
-        return { ok: true, order: response };
+        return res.status(200).json({ ok: true, message: "success" });
       } else {
         console.log("LAZADA SECRETS ERROR", response);
-        return { ok: false, order: response };
+        return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
       connection.release();
     }
   } catch (error) {
     console.log("LAZADA SECRETS ERROR", error);
-    return;
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 
   async function signRequest(api, params, secrets) {

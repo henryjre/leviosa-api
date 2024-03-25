@@ -1,12 +1,12 @@
 import * as cron from "cron";
-import pools from "../sqlPools.js";
 import moment from "moment-timezone";
 
 import {
   lazadaGetAPIRequest,
   shopeeGetAPIRequest,
   tiktokGetAPIRequest,
-} from "../functions/api_request_functions.js";
+} from "../../../functions/api_request_functions.js";
+import pools from "../../../sqlPools.js";
 
 const cronJob = cron.CronJob;
 
@@ -43,17 +43,14 @@ const checkTiktokSettlements = new cronJob(
   "Asia/Manila"
 );
 
-export default {
-  checkLazadaSettlements,
-  checkTiktokSettlements,
-  checkShopeeSettlements,
+export {
   checkForLazadaSettlements,
   checkForShopeeSettlements,
   checkForTiktokSettlements,
 };
 
 //FOR TIKTOK SETTLEMENTS
-async function checkForTiktokSettlements() {
+async function checkForTiktokSettlements(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -148,7 +145,8 @@ async function checkForTiktokSettlements() {
           .map((order) => `'${order.orderId}'`)
           .join(", ")});`;
       await inv_connection.query(updateOrders);
-      console.log("TIKTOK ORDERS WERE SETTLED")
+      console.log("TIKTOK ORDERS WERE SETTLED");
+      return res.status(200).json({ ok: true, message: "success" });
 
       //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
       //   await inv_connection.query(inserSettlement, valuesToInsert);
@@ -158,7 +156,7 @@ async function checkForTiktokSettlements() {
     }
   } catch (error) {
     console.log(error.toString());
-    return;
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
@@ -186,7 +184,7 @@ async function getTiktokStatementTransactions(secrets, statementId) {
 //
 //
 //FOR LAZADA SETTLEMENTS
-async function checkForLazadaSettlements() {
+async function checkForLazadaSettlements(req, res) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
@@ -320,13 +318,15 @@ async function checkForLazadaSettlements() {
         .join(", ")});`;
       await inv_connection.query(updateOrders);
 
-      console.log("LAZADA ORDERS WERE SETTLED")
+      console.log("LAZADA ORDERS WERE SETTLED");
+      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       def_connection.release();
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
@@ -339,7 +339,7 @@ async function queryOrderSettlements(secrets, startTime, endTime) {
 //
 //
 // FOR SHOPEE SETTLEMENTS
-async function checkForShopeeSettlements() {
+async function checkForShopeeSettlements(req, res) {
   const secretId = process.env.shopee_secrets_id;
   try {
     const def_connection = await pools.leviosaPool.getConnection();
@@ -420,13 +420,15 @@ async function checkForShopeeSettlements() {
         .join(", ")});`;
       await inv_connection.query(updateOrders);
 
-      console.log("SHOPEE ORDERS WERE SETTLED")
+      console.log("SHOPEE ORDERS WERE SETTLED");
+      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       def_connection.release();
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 

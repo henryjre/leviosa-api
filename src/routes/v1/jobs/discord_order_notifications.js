@@ -1,10 +1,11 @@
-import { botApiPostCall } from "../functions/api_request_functions.js";
-import { getMultipleLazOrders } from "../functions/lazada.js";
-import { getShopeeOrders } from "../functions/shopee.js";
-import { getTiktokOrdersDetails } from "../functions/tiktok.js";
-import pools from "../sqlPools.js";
+import { botApiPostCall } from "../../../functions/api_request_functions.js";
+import { getMultipleLazOrders } from "../../../functions/lazada.js";
+import { getShopeeOrders } from "../../../functions/shopee.js";
+import { getTiktokOrdersDetails } from "../../../functions/tiktok.js";
+import pools from "../../../sqlPools.js";
 
 import * as cron from "cron";
+
 const cronJob = cron.CronJob;
 const path = "/api/notifications/orders/createOrderThread";
 
@@ -23,11 +24,16 @@ const discordNotificationsJob = new cronJob(
   "Asia/Manila"
 );
 
-export default {
-  discordNotificationsJob,
-};
+export async function runDiscordNotifs() {
+  console.log("Running shopee discord notifications...");
+  await shopeeOrderNotif();
+  console.log("Running lazada discord notifications...");
+  await lazadaOrderNotif();
+  console.log("Running tiktok discord notifications...");
+  await tiktokOrderNotif();
+}
 
-async function shopeeOrderNotif() {
+async function shopeeOrderNotif(req, res) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
@@ -51,7 +57,7 @@ async function shopeeOrderNotif() {
 
       if (!shopeeOrdersDb.length) {
         console.log("No shopee orders for new discord notification");
-        return;
+        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const orderIds = shopeeOrdersDb.map((o) => o.ORDER_ID);
@@ -96,15 +102,17 @@ async function shopeeOrderNotif() {
     .join(", ")});
 `;
       await inv_connection.query(updateQuery);
+      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
-async function lazadaOrderNotif() {
+async function lazadaOrderNotif(req, res) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
@@ -128,7 +136,7 @@ async function lazadaOrderNotif() {
 
       if (!lazOrdersDb.length) {
         console.log("No lazada orders for new discord notification");
-        return;
+        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const orderIds = lazOrdersDb.map((o) => o.ORDER_ID);
@@ -173,15 +181,17 @@ async function lazadaOrderNotif() {
     .join(", ")});
 `;
       await inv_connection.query(updateQuery);
+      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
 
-async function tiktokOrderNotif() {
+async function tiktokOrderNotif(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
@@ -205,7 +215,7 @@ async function tiktokOrderNotif() {
 
       if (!tiktokOrdersDb.length) {
         console.log("No tiktok orders for new discord notification");
-        return;
+        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const orderIds = tiktokOrdersDb.map((o) => o.ORDER_ID);
@@ -257,10 +267,12 @@ async function tiktokOrderNotif() {
     .join(", ")});
 `;
       await inv_connection.query(updateQuery);
+      return res.status(200).json({ ok: true, message: "success" });
     } finally {
       inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
+    return res.status(400).json({ ok: false, message: "fail" });
   }
 }
