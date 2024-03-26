@@ -16,6 +16,7 @@ export async function runDiscordNotifs(req, res) {
     await tiktokOrderNotif();
     return res.status(200).json({ ok: true, message: "success" });
   } catch (error) {
+    console.log(error.toString());
     return res.status(400).json({ ok: false, message: "fail" });
   }
 }
@@ -44,7 +45,6 @@ async function shopeeOrderNotif() {
 
       if (!shopeeOrdersDb.length) {
         console.log("No shopee orders for new discord notification");
-        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const orderIds = shopeeOrdersDb.map((o) => o.ORDER_ID);
@@ -121,7 +121,6 @@ async function lazadaOrderNotif() {
 
       if (!lazOrdersDb.length) {
         console.log("No lazada orders for new discord notification");
-        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const orderIds = lazOrdersDb.map((o) => o.ORDER_ID);
