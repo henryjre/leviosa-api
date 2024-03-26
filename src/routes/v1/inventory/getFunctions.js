@@ -170,6 +170,9 @@ export async function getRetailOrders(req, res) {
           obj.CREATED_DATE = moment(obj.CREATED_DATE).format(
             "MMMM DD, YYYY h:mm A"
           );
+          obj.CANCEL_DATE = obj.CANCEL_DATE
+            ? moment(obj.CANCEL_DATE).format("MMMM DD, YYYY h:mm A")
+            : null;
           obj.ORDER_STATUS = obj.ORDER_STATUS.replace(/_/g, " ");
           obj.RECEIVABLES_AMOUNT = Number(obj.RECEIVABLES_AMOUNT);
 
