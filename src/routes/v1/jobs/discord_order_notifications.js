@@ -43,8 +43,9 @@ async function shopeeOrderNotif() {
       const selectOrdersQuery = `SELECT * FROM Orders_Shopee WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
       const [shopeeOrdersDb] = await inv_connection.query(selectOrdersQuery);
 
-      if (!shopeeOrdersDb.length) {
+      if (shopeeOrdersDb.length === 0) {
         console.log("No shopee orders for new discord notification");
+        return;
       }
 
       const orderIds = shopeeOrdersDb.map((o) => o.ORDER_ID);
@@ -119,8 +120,9 @@ async function lazadaOrderNotif() {
       const selectOrdersQuery = `SELECT * FROM Orders_Lazada WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
       const [lazOrdersDb] = await inv_connection.query(selectOrdersQuery);
 
-      if (!lazOrdersDb.length) {
+      if (lazOrdersDb.length === 0) {
         console.log("No lazada orders for new discord notification");
+        return;
       }
 
       const orderIds = lazOrdersDb.map((o) => o.ORDER_ID);
@@ -195,11 +197,13 @@ async function tiktokOrderNotif() {
       const selectOrdersQuery = `SELECT * FROM Orders_Tiktok WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
       const [tiktokOrdersDb] = await inv_connection.query(selectOrdersQuery);
 
-      if (!tiktokOrdersDb.length) {
+      if (tiktokOrdersDb.length === 0) {
         console.log("No tiktok orders for new discord notification");
+        return;
       }
 
       const orderIds = tiktokOrdersDb.map((o) => o.ORDER_ID);
+
       const tiktokOrdersFetch = await getTiktokOrdersDetails(secrets, orderIds);
 
       if (!tiktokOrdersFetch.ok) {
