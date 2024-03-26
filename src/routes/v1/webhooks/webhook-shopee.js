@@ -78,7 +78,7 @@ async function orderStatusChange(
   const status = body.data.status;
   const orderId = body.data.ordersn;
 
-  if (["UNPAID", "READY_TO_SHIP"].includes(status)) {
+  if (status === "READY_TO_SHIP") {
     const selectOrderQuery = "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
 
