@@ -96,6 +96,7 @@ async function orderStatusChange(
     }
 
     const orderData = orderFetch.data.response.order_list[0];
+
     const skuArray = orderData.item_list.map((item) => ({
       sku: item.model_sku.length > 0 ? item.model_sku : item.item_sku,
       quantity: item.model_quantity_purchased,
@@ -205,9 +206,17 @@ async function orderStatusChange(
 
     await inv_connection.query(insertOrdersQuery, [orderData.order_sn]);
 
+    const orderCancelDate = moment
+      .unix(orderData.update_time)
+      .format("YYYY-MM-DD HH:mm:ss");
+
     const updateQuery =
-      "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-    await inv_connection.query(updateQuery, [cancelStatus, orderData.order_sn]);
+      "UPDATE Orders_Shopee SET ORDER_STATUS = ?, CANCEL_DATE = ? WHERE ORDER_ID = ?";
+    await inv_connection.query(updateQuery, [
+      cancelStatus,
+      orderCancelDate,
+      orderData.order_sn,
+    ]);
 
     if (cancelStatus === "CANCELLED") {
       const selectQuery =

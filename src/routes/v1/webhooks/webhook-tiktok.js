@@ -212,9 +212,17 @@ async function orderStatusChange(
 
     await inv_connection.query(insertOrdersQuery, [orderId]);
 
+    const orderCancelDate = moment
+      .unix(orderData.cancel_time)
+      .format("YYYY-MM-DD HH:mm:ss");
+
     const updateQuery =
-      "UPDATE Orders_Tiktok SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-    await inv_connection.query(updateQuery, [cancelStatus, orderId]);
+      "UPDATE Orders_Tiktok SET ORDER_STATUS = ?, CANCEL_DATE = ? WHERE ORDER_ID = ?";
+    await inv_connection.query(updateQuery, [
+      cancelStatus,
+      orderCancelDate,
+      orderId,
+    ]);
 
     if (cancelStatus === "CANCELLED") {
       const selectQuery =

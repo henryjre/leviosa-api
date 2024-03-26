@@ -213,9 +213,18 @@ async function orderStatusChange(
 
     await inv_connection.query(insertOrdersQuery, [orderId]);
 
+    const orderCancelDate = moment(
+      orderFetch.data.data[0].updated_at,
+      "YYYY-MM-DD HH:mm:ss ZZ"
+    ).format("YYYY-MM-DD HH:mm:ss");
+
     const updateQuery =
-      "UPDATE Orders_Lazada SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
-    await inv_connection.query(updateQuery, [cancelStatus, orderId]);
+      "UPDATE Orders_Lazada SET ORDER_STATUS = ?, CANCEL_DATE = ? WHERE ORDER_ID = ?";
+    await inv_connection.query(updateQuery, [
+      cancelStatus,
+      orderCancelDate,
+      orderId,
+    ]);
 
     if (status === "canceled") {
       const selectQuery =
