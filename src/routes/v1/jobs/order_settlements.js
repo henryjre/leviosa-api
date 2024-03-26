@@ -163,12 +163,12 @@ async function checkForLazadaSettlements(req, res) {
         throw new Error("No Lazada orders to settle. Ending job...");
       }
 
-      let startDate = moment(0).tz("Asia/Manila");
-      let endDate = moment().tz("Asia/Manila");
+      let startDate = moment(0);
+      let endDate = moment();
 
       for (const order of settledOrders) {
-        const createdDate = moment(order.CREATED_DATE);
-        const deliveredDate = moment(order.LAST_UPDATED);
+        const createdDate = moment(order.CREATED_DATE).subtract(2, "days");
+        const deliveredDate = moment(order.CREATED_DATE).add(14, "days");
 
         if (deliveredDate.isBefore(endDate)) {
           endDate = deliveredDate;
@@ -188,7 +188,7 @@ async function checkForLazadaSettlements(req, res) {
       ]);
 
       if (!secretsResult.length) {
-        throw new Error("No Tiktok secrets found. Ending job...");
+        throw new Error("No Lazada secrets found. Ending job...");
       }
 
       const secrets = secretsResult[0];
@@ -226,11 +226,15 @@ async function checkForLazadaSettlements(req, res) {
           (s) => s.order_no === order.ORDER_ID
         );
 
-        if (!settlements.length) continue;
+        if (!orderSettlements.length) continue;
+
+        console.log(orderSettlements);
 
         const totalItemPriceCredit = orderSettlements.reduce((sum, s_order) => {
           if (s_order.fee_name === "Item Price Credit") {
-            const amount = parseFloat(Math.abs(s_order.amount));
+            const cleanedAmount = s_order.amount.replace(/,/g, "");
+            const amount = Number(Math.abs(cleanedAmount));
+            console.log(amount);
             sum += isNaN(amount) ? 0 : amount;
           }
           return sum;
@@ -238,7 +242,8 @@ async function checkForLazadaSettlements(req, res) {
 
         const totalSettlementFees = orderSettlements.reduce((sum, s_order) => {
           if (s_order.fee_name !== "Item Price Credit") {
-            const amount = parseFloat(Math.abs(s_order.amount));
+            const cleanedAmount = s_order.amount.replace(/,/g, "");
+            const amount = Number(Math.abs(cleanedAmount));
             sum += isNaN(amount) ? 0 : amount;
           }
           return sum;
