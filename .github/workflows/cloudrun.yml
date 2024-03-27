@@ -46,4 +46,5 @@ jobs:
           --region $REGION \
           --image asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA \
           --platform "managed" \
-          --quiet
+          --quiet \
+          --port 8080
