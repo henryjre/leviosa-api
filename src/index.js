@@ -18,5 +18,3 @@ app.use("/api", routes);
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
-
-//testing
