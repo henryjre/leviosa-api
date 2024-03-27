@@ -30,20 +30,20 @@ jobs:
         uses: google-github-actions/setup-gcloud@v1
 
       - name: Authorize Docker push
-        run: gcloud auth configure-docker
+        run: gcloud auth configure-docker asia-southeast1-docker.pkg.dev
 
       - name: Build and tag the docker image
         run: |-
-          docker build . --tag asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA
+          docker build . --tag asia-southeast1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA
 
       - name: Push the image to the Google Container Registry (GCR)
         run: |-
-          docker push asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA
+          docker push asia-southeast1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA
 
       - name: Deploy
         run: |-
           gcloud run deploy $REPO_NAME \
           --region $REGION \
-          --image asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA \
+          --image asia-southeast1-docker.pkg.dev/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA \
           --platform "managed" \
           --quiet
