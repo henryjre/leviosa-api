@@ -29,25 +29,21 @@ jobs:
       - name: Set up Cloud SDK
         uses: google-github-actions/setup-gcloud@v1
 
-      - name: 'Use gcloud CLI'
-        run: 'gcloud info'
-
       - name: Authorize Docker push
-        run: gcloud auth configure-docker asia-southeast1-docker.pkg.dev
+        run: gcloud auth configure-docker
 
-      - name: build Docker Image
-        run: docker build -t LEVIOSA_API:latest .
+      - name: Build and tag the docker image
+        run: |-
+          docker build . --tag asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA
 
-      - name: Configure Docker Client of Gcloud
-        run:  |-
-          gcloud auth configure-docker --quiet
-          gcloud auth configure-docker asia-southeast1-docker.pkg.dev --quiet
+      - name: Push the image to the Google Container Registry (GCR)
+        run: |-
+          docker push asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA
 
-      - name: Push Docker Image to Artifact Registry
-        env:
-          GIT_TAG: v0.1.0
-        run:  |-
-          docker tag LEVIOSA_API:latest asia-southeast1-docker.pkg.dev/PROJECT_ID/images/LEVIOSA_API:latest
-          docker tag LEVIOSA_API:latest asia-southeast1-docker.pkg.dev/PROJECT_ID/images/LEVIOSA_API:$GIT_TAG
-          docker push asia-southeast1-docker.pkg.dev/PROJECT_ID/images/LEVIOSA_API:latest
-          docker push asia-southeast1-docker.pkg.dev/PROJECT_ID/images/LEVIOSA_API:$GIT_TAG
+      - name: Deploy
+        run: |-
+          gcloud run deploy $REPO_NAME \
+          --region $REGION \
+          --image asia.gcr.io/$PROJECT_ID/$REPO_NAME:$GITHUB_SHA \
+          --platform "managed" \
+          --quiet
