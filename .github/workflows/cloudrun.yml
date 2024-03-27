@@ -9,7 +9,7 @@ env:
   PROJECT_ID: "${{ secrets.CLOUD_RUN_PROJECT_NAME }}"
   REGION: asia-southeast1
   # project-name but it can be anything you want
-  REPO_NAME: leviosa-api
+  REPO_NAME: leviosa-api-docker
 
 jobs:
   build-and-deploy:
@@ -27,7 +27,7 @@ jobs:
 
       # Setup gcloud CLI/SDK
       - name: Set up Cloud SDK
-        uses: google-github-actions/setup-gcloud@v0
+        uses: google-github-actions/setup-gcloud@v1
 
       - name: Authorize Docker push
         run: gcloud auth configure-docker
