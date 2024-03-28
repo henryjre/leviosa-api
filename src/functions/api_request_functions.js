@@ -314,7 +314,7 @@ export async function botApiPostCall(fetchBody, path) {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "x-api-key": process.env.apiKey,
+      "x-api-key": process.env.api_key,
     },
     body: JSON.stringify(fetchBody),
   };
