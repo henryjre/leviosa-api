@@ -83,6 +83,11 @@ async function checkForTiktokSettlements(req, res) {
         settlementFees: Math.abs(order.fee_amount),
       }));
 
+      if (toSettleOrders.length === 0) {
+        console.log("No Tiktok orders to settle. Ending job...");
+        return res.status(200).json({ ok: true, message: "success" });
+      }
+
       const updateOrders = `
         UPDATE Orders_Tiktok
         SET 
@@ -160,7 +165,8 @@ async function checkForLazadaSettlements(req, res) {
       const [settledOrders] = await inv_connection.query(selectOrders);
 
       if (!settledOrders.length) {
-        throw new Error("No Lazada orders to settle. Ending job...");
+        console.log("No Lazada orders to settle. Ending job...");
+        return res.status(200).json({ ok: true, message: "success" });
       }
 
       let startDate = moment(0);
@@ -228,8 +234,6 @@ async function checkForLazadaSettlements(req, res) {
 
         if (!orderSettlements.length) continue;
 
-        console.log(orderSettlements);
-
         const totalItemPriceCredit = orderSettlements.reduce((sum, s_order) => {
           if (s_order.fee_name === "Item Price Credit") {
             const cleanedAmount = s_order.amount.replace(/,/g, "");
@@ -258,6 +262,11 @@ async function checkForLazadaSettlements(req, res) {
           settlementAmount: Number(totalSettledAmount.toFixed(2)),
           settlementFees: Number(totalSettlementFees.toFixed(2)),
         });
+      }
+
+      if (toSettleOrders.length === 0) {
+        console.log("No Lazada orders to settle. Ending job...");
+        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const updateOrders = `
@@ -360,6 +369,11 @@ async function checkForShopeeSettlements(req, res) {
           settlementAmount: totalSettlement,
           settlementFees: totalFees,
         });
+      }
+
+      if (toSettleOrders.length === 0) {
+        console.log("No Shopee orders to settle. Ending job...");
+        return res.status(200).json({ ok: true, message: "success" });
       }
 
       const updateOrders = `
