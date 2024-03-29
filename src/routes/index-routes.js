@@ -1,4 +1,4 @@
-import { Router } from "express";
+import Router from "express-promise-router";
 import v1 from "./v1/index-v1.js";
 
 const routes = Router();
