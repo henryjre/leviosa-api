@@ -83,10 +83,26 @@ async function orderStatusChange(
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
 
     if (order.length > 0) {
-      console.log(
-        `Shopee order #${orderId} is already in database. Ignoring...`
-      );
-      return res.status(200).json({ ok: true, message: "success" });
+      if (order[0].status === "IN_CANCEL") {
+        const insertOrdersQuery =
+          "INSERT IGNORE INTO Pending_Inventory_Out SELECT * FROM Cancelled_Inventory_Out WHERE ORDER_ID = ?";
+        const deleteOrdersQuery =
+          "DELETE FROM Cancelled_Inventory_Out WHERE ORDER_ID = ?";
+
+        const updateQuery =
+          "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+        await inv_connection.query(updateQuery, [status, orderId]);
+
+        await inv_connection.query(insertOrdersQuery, [orderId]);
+        await inv_connection.query(deleteOrdersQuery, [orderId]);
+
+        return res.status(200).json({ ok: true, message: "success" });
+      } else {
+        console.log(
+          `Shopee order #${orderId} is already in database. Ignoring...`
+        );
+        return res.status(200).json({ ok: true, message: "success" });
+      }
     }
 
     const orderFetch = await getOrderDetail(secrets, orderId);
@@ -160,6 +176,37 @@ async function orderStatusChange(
     }
 
     console.log(`Pending Shopee order #${orderId} recorded!`);
+    return res.status(200).json({ ok: true, message: "success" });
+  } else if (status === "IN_CANCEL") {
+    const selectOrderQuery = "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
+    const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
+
+    if (order.length <= 0) {
+      console.log(
+        `Cancelled Shopee order #${orderId} not found in database. Ignoring...`
+      );
+      return res.status(200).json({ ok: true, message: "success" });
+    }
+
+    if (order[0].ORDER_STATUS === "IN_CANCEL") {
+      console.log(
+        `Pending cancel Shopee order #${orderId} is already recorded. Ignoring...`
+      );
+      return res.status(200).json({ ok: true, message: "success" });
+    }
+
+    const insertOrdersQuery =
+      "INSERT IGNORE INTO Cancelled_Inventory_Out SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
+    const deleteOrdersQuery =
+      "DELETE FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
+
+    const updateQuery =
+      "UPDATE Orders_Shopee SET ORDER_STATUS = ? WHERE ORDER_ID = ?";
+    await inv_connection.query(updateQuery, [status, orderId]);
+
+    await inv_connection.query(insertOrdersQuery, [orderId]);
+    await inv_connection.query(deleteOrdersQuery, [orderId]);
+
     return res.status(200).json({ ok: true, message: "success" });
   } else if (status === "CANCELLED") {
     const selectOrderQuery = "SELECT * FROM Orders_Shopee WHERE ORDER_ID = ?";
