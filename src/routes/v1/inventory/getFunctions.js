@@ -163,11 +163,13 @@ export async function getRetailOrders(req, res) {
         return res.status(200).json({ ok: true, message: "success", data: [] });
       } else {
         const filteredResult = selectResult.map((obj) => {
-          delete obj.LAST_UPDATED;
           delete obj.DISCORD_CHANNEL;
 
           obj.SETTLED = parseInt(obj.SETTLED) === 0 ? "NO" : "YES";
           obj.CREATED_DATE = moment(obj.CREATED_DATE).format(
+            "MMMM DD, YYYY h:mm A"
+          );
+          obj.LAST_UPDATED = moment(obj.LAST_UPDATED).format(
             "MMMM DD, YYYY h:mm A"
           );
           obj.CANCEL_DATE = obj.CANCEL_DATE
