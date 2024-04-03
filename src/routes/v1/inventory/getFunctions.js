@@ -97,7 +97,7 @@ export async function getInventoryProductOrders(req, res) {
 }
 
 export async function getRetailOrders(req, res) {
-  const { start_date, end_date, platform } = req.query;
+  const { start_date, end_date, platform, sort_by } = req.query;
 
   try {
     if (!start_date || !end_date || !platform) {
@@ -111,13 +111,13 @@ export async function getRetailOrders(req, res) {
     let queryString;
     switch (platform) {
       case "SHOPEE":
-        queryString = `SELECT *, 'SHOPEE' AS PLATFORM FROM Orders_Shopee WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
+        queryString = `SELECT *, 'SHOPEE' AS PLATFORM FROM Orders_Shopee WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ${sort_by};`;
         break;
       case "LAZADA":
-        queryString = `SELECT *, 'LAZADA' AS PLATFORM FROM Orders_Lazada WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
+        queryString = `SELECT *, 'LAZADA' AS PLATFORM FROM Orders_Lazada WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ${sort_by};`;
         break;
       case "TIKTOK":
-        queryString = `SELECT *, 'TIKTOK' AS PLATFORM FROM Orders_Tiktok WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ASC;`;
+        queryString = `SELECT *, 'TIKTOK' AS PLATFORM FROM Orders_Tiktok WHERE CREATED_DATE BETWEEN ? AND ? ORDER BY CREATED_DATE ${sort_by};`;
         break;
       case "ALL":
         queryString = null;
@@ -140,7 +140,7 @@ export async function getRetailOrders(req, res) {
     UNION ALL
     (SELECT *, 'TIKTOK' AS PLATFORM FROM Orders_Tiktok WHERE CREATED_DATE BETWEEN ? AND ?)
   ) AS CombinedOrders
-  ORDER BY CREATED_DATE ASC;
+  ORDER BY CREATED_DATE ${sort_by};
 `;
         queryResult = await inv_connection.query(selectQuery, [
           start_date,
