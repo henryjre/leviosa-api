@@ -6,8 +6,9 @@ import { getTiktokOrderList } from "../../../functions/tiktok.js";
 import pools from "../../../sqlPools.js";
 import moment from "moment-timezone";
 
+const secretId = process.env.tiktok_secrets_id;
+
 export async function getPendingTiktokOrders(req, res) {
-  const secretId = process.env.tiktok_secrets_id;
   try {
     const def_connection = await pools.leviosaPool.getConnection();
     const inv_connection = await pools.inventoryPool.getConnection();
@@ -37,7 +38,8 @@ export async function getPendingTiktokOrders(req, res) {
       const tiktokOrdersFetch = await getTiktokOrderList(
         secrets,
         startTimeUnix,
-        endTimeUnix
+        endTimeUnix,
+        "AWAITING_SHIPMENT"
       );
 
       if (!tiktokOrdersFetch.ok) {
@@ -145,6 +147,127 @@ export async function getPendingTiktokOrders(req, res) {
       return res
         .status(200)
         .json({ ok: true, message: "All orders were recorded!" });
+    } finally {
+      def_connection.release();
+      inv_connection.release();
+    }
+  } catch (error) {
+    console.log(`Error in function getPendingTiktokOrders: ${error.message}`);
+
+    return res.status(400).json({ ok: false, message: error.message });
+  }
+}
+
+export async function updateTiktokOrderStatuses(req, res) {
+  try {
+    const def_connection = await pools.leviosaPool.getConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
+
+    try {
+      const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
+      const [secretsResult] = await def_connection.query(querySecrets, [
+        secretId,
+      ]);
+
+      if (secretsResult.length <= 0) {
+        throw new Error("No secrets found.");
+      }
+
+      const secrets = secretsResult[0];
+
+      const selectQuery = `
+      SELECT *
+      FROM Orders_Tiktok 
+      WHERE ORDER_STATUS NOT IN ('COMPLETED', 'CANCELLED', 'RTS')
+      AND CREATED_DATE <= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+      ORDER BY CREATED_DATE ASC 
+      LIMIT 30;
+    `;
+
+      const [orders] = await inv_connection.query(selectQuery);
+
+      if (orders.length === 0) {
+        return res
+          .status(200)
+          .json({ ok: true, message: "No orders to update found." });
+      }
+
+      let startDate = moment();
+      let endDate = moment(0);
+
+      for (const order of orders) {
+        const createdDate = moment(order.CREATED_DATE);
+
+        if (createdDate.isBefore(startDate)) {
+          startDate = createdDate;
+        }
+
+        if (createdDate.isAfter(endDate)) {
+          endDate = createdDate;
+        }
+      }
+
+      const startTimeUnix = startDate.unix();
+      const endTimeUnix = endDate.unix();
+
+      const tiktokOrdersFetch = await getTiktokOrderList(
+        secrets,
+        startTimeUnix,
+        endTimeUnix,
+        "COMPLETED"
+      );
+
+      if (!tiktokOrdersFetch.ok) {
+        throw new Error(
+          "There was an error while getting the Tiktok Orders. Please try again"
+        );
+      }
+
+      if (tiktokOrdersFetch.data.data.total_count === 0) {
+        return res
+          .status(200)
+          .json({ ok: true, message: "No orders to update found." });
+      }
+
+      const tiktokOrdersResult = tiktokOrdersFetch.data.data.orders;
+
+      const ordersResult = tiktokOrdersResult.map((order) => ({
+        order_id: order.id,
+        status: order.status,
+      }));
+
+      const orderIdsCsv = ordersResult
+        .map((order) => `'${order.order_id}'`)
+        .join(", ");
+
+      const updateProductQuery = `
+        UPDATE Orders_Tiktok
+            SET ORDER_STATUS = CASE ORDER_ID
+                ${ordersResult
+                  .map(
+                    (order) => `WHEN '${order.order_id}' THEN '${order.status}'`
+                  )
+                  .join(" ")}
+            END
+        WHERE ORDER_ID IN (${orderIdsCsv});`;
+
+      const [query] = await inv_connection.query(updateProductQuery);
+
+      if (query.changedRows === 0) {
+        return res.status(200).json({
+          ok: true,
+          message: "No orders were updated",
+          length: ordersResult.length,
+          updated: query.changedRows,
+        });
+      } else {
+        return res.status(200).json({
+          ok: true,
+          message: "Order statuses updated!",
+          length: ordersResult.length,
+          updated: query.changedRows,
+        });
+      }
     } finally {
       def_connection.release();
       inv_connection.release();

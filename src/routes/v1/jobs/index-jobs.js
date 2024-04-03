@@ -24,4 +24,7 @@ jobs.get("/settleLazada", settlement.checkForLazadaSettlements);
 // "/api/v1/jobs/settleTiktok"
 jobs.get("/settleTiktok", settlement.checkForTiktokSettlements);
 
+// "/api/v1/jobs/settleTiktokOrders"
+jobs.get("/settleTiktokOrders", settlement.checkTiktokOrderSettlements);
+
 export default jobs;

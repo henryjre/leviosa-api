@@ -11,6 +11,7 @@ export {
   checkForLazadaSettlements,
   checkForShopeeSettlements,
   checkForTiktokSettlements,
+  checkTiktokOrderSettlements,
 };
 
 //FOR TIKTOK SETTLEMENTS
@@ -73,6 +74,8 @@ async function checkForTiktokSettlements(req, res) {
       const statementOrders =
         orderStatementFetch.data.data.statement_transactions;
 
+      const statement_time = orderStatementFetch.data.data.statement_time;
+
       if (!statementOrders.length) {
         throw new Error("No Tiktok orders to settle. Ending job...");
       }
@@ -81,6 +84,9 @@ async function checkForTiktokSettlements(req, res) {
         orderId: order.id,
         settlementAmount: Number(order.settlement_amount),
         settlementFees: Math.abs(order.fee_amount),
+        statementTime: moment
+          .unix(statement_time)
+          .format("YYYY-MM-DD HH:mm:ss"),
       }));
 
       if (toSettleOrders.length === 0) {
@@ -109,6 +115,15 @@ async function checkForTiktokSettlements(req, res) {
                   .join(" ")}
                 ELSE NET_SETTLEMENT_FEES
             END,
+            LAST_UPDATED = CASE ORDER_ID
+                ${toSettleOrders
+                  .map(
+                    (order) =>
+                      `WHEN '${order.orderId}' THEN '${order.statementTime}'`
+                  )
+                  .join(" ")}
+                ELSE LAST_UPDATED
+            END,
             SETTLED = 1
         WHERE ORDER_ID IN (${toSettleOrders
           .map((order) => `'${order.orderId}'`)
@@ -129,13 +144,181 @@ async function checkForTiktokSettlements(req, res) {
   }
 }
 
-async function getTiktokDailyStatement(secrets) {
+async function checkTiktokOrderSettlements(req, res) {
+  const secretId = process.env.tiktok_secrets_id;
+
+  try {
+    const def_connection = await pools.leviosaPool.getConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
+
+    try {
+      const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
+      const [secretsResult] = await def_connection.query(querySecrets, [
+        secretId,
+      ]);
+
+      if (!secretsResult.length) {
+        throw new Error("No Tiktok secrets found. Ending job...");
+      }
+
+      const secrets = secretsResult[0];
+
+      const selectQuery = `
+      SELECT *
+      FROM Orders_Tiktok 
+      WHERE ORDER_STATUS = 'COMPLETED' AND SETTLED = 0
+      ORDER BY CREATED_DATE ASC 
+      LIMIT 10;
+      `;
+
+      const [orders] = await inv_connection.query(selectQuery);
+
+      if (orders.length === 0) {
+        return res
+          .status(200)
+          .json({ ok: true, message: "No orders to settle found." });
+      }
+
+      let startDate = moment();
+      // let endDate = moment(0);
+
+      for (const order of orders) {
+        const createdDate = moment(order.CREATED_DATE);
+
+        if (createdDate.isBefore(startDate)) {
+          startDate = createdDate;
+        }
+
+        // if (createdDate.isAfter(endDate)) {
+        //   endDate = createdDate;
+        // }
+      }
+
+      const startTimeUnix = startDate.add(5, "days").unix();
+      const endTimeUnix = moment().unix();
+
+      const statementFetch = await getTiktokDailyStatement(
+        secrets,
+        startTimeUnix,
+        endTimeUnix
+      );
+
+      if (!statementFetch.ok) {
+        console.log(statementFetch);
+        throw new Error("There was an error while fetching the statement.");
+      }
+
+      const statements = statementFetch.data.data.statements;
+
+      let toSettleOrders = [];
+      for (const statement of statements) {
+        const orderStatementFetch = await getTiktokStatementTransactions(
+          secrets,
+          statement.id
+        );
+
+        if (!orderStatementFetch.ok) {
+          console.log(orderStatementFetch);
+          continue;
+        }
+
+        const statementOrders =
+          orderStatementFetch.data.data.statement_transactions;
+
+        const statement_time = orderStatementFetch.data.data.statement_time;
+
+        if (!statementOrders.length) {
+          continue;
+        }
+
+        const order_settlement = statementOrders.map((order) => ({
+          orderId: order.order_id,
+          settlementAmount: Number(order.settlement_amount),
+          settlementFees: Math.abs(order.fee_amount),
+          statementTime: moment
+            .unix(statement_time)
+            .format("YYYY-MM-DD HH:mm:ss"),
+        }));
+
+        toSettleOrders = [...toSettleOrders, ...order_settlement];
+      }
+
+      if (toSettleOrders.length === 0) {
+        console.log("No Tiktok orders to settle. Ending job...");
+        return res.status(200).json({ ok: true, message: "success" });
+      }
+
+      const updateOrders = `
+        UPDATE Orders_Tiktok
+        SET 
+            NET_SETTLEMENT_AMOUNT = CASE ORDER_ID
+                ${toSettleOrders
+                  .map(
+                    (order) =>
+                      `WHEN '${order.orderId}' THEN ${order.settlementAmount}`
+                  )
+                  .join(" ")}
+                ELSE NET_SETTLEMENT_AMOUNT
+            END,
+            NET_SETTLEMENT_FEES = CASE ORDER_ID
+                ${toSettleOrders
+                  .map(
+                    (order) =>
+                      `WHEN '${order.orderId}' THEN ${order.settlementFees}`
+                  )
+                  .join(" ")}
+                ELSE NET_SETTLEMENT_FEES
+            END,
+            LAST_UPDATED = CASE ORDER_ID
+                ${toSettleOrders
+                  .map(
+                    (order) =>
+                      `WHEN '${order.orderId}' THEN '${order.statementTime}'`
+                  )
+                  .join(" ")}
+                ELSE LAST_UPDATED
+            END,
+            SETTLED = 1
+        WHERE ORDER_ID IN (${toSettleOrders
+          .map((order) => `'${order.orderId}'`)
+          .join(", ")});`;
+      const [update] = await inv_connection.query(updateOrders);
+
+      if (update.changedRows === 0) {
+        console.log("NO TIKTOK ORDERS SETTLED");
+        return res
+          .status(200)
+          .json({ ok: true, message: "No orders were settled" });
+      } else {
+        console.log("TIKTOK ORDERS WERE SETTLED");
+        return res.status(200).json({ ok: true, message: "success" });
+      }
+
+      //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
+      //   await inv_connection.query(inserSettlement, valuesToInsert);
+    } finally {
+      def_connection.release();
+      inv_connection.release();
+    }
+  } catch (error) {
+    console.log(error.toString());
+    return res.status(400).json({ ok: false, message: "fail" });
+  }
+}
+
+async function getTiktokDailyStatement(secrets, start_time, end_time) {
   const path = "/finance/202309/statements";
   const queryParams = {
     page_size: 1,
     sort_field: "statement_time",
     sort_order: "DESC",
   };
+
+  if (start_time) {
+    queryParams.statement_time_ge = start_time;
+    queryParams.statement_time_lt = end_time;
+    queryParams.page_size = 100;
+  }
 
   return tiktokGetAPIRequest(secrets, path, queryParams);
 }

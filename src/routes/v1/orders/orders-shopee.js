@@ -9,8 +9,9 @@ import {
 import pools from "../../../sqlPools.js";
 import moment from "moment-timezone";
 
+const secretId = process.env.shopee_secrets_id;
+
 export async function getPendingShopeeOrders(req, res) {
-  const secretId = process.env.shopee_secrets_id;
   try {
     const def_connection = await pools.leviosaPool.getConnection();
     const inv_connection = await pools.inventoryPool.getConnection();
@@ -40,7 +41,8 @@ export async function getPendingShopeeOrders(req, res) {
       const shopeeOrdersFetch = await getShopeeOrderList(
         secrets,
         startTimeUnix,
-        endTimeUnix
+        endTimeUnix,
+        "READY_TO_SHIP"
       );
 
       if (!shopeeOrdersFetch.ok) {
@@ -61,7 +63,7 @@ export async function getPendingShopeeOrders(req, res) {
       SELECT ORDER_ID FROM Orders_Shopee 
       WHERE CREATED_DATE BETWEEN ? AND ? 
       AND ORDER_STATUS IN ('UNPAID', 'READY_TO_SHIP') 
-      ORDER BY CREATED_DATE ASC;
+      ORDER BY CREATED_DATE ASC
     `;
       const [dbOrdersFetch] = await inv_connection.query(selectQuery, [
         startTimeSql,
@@ -166,6 +168,144 @@ export async function getPendingShopeeOrders(req, res) {
       return res
         .status(200)
         .json({ ok: true, message: "All orders were recorded!" });
+    } finally {
+      def_connection.release();
+      inv_connection.release();
+    }
+  } catch (error) {
+    console.log(`Error in function getPendingShopeeOrders: ${error.message}`);
+
+    return res.status(400).json({ ok: false, message: error.message });
+  }
+}
+
+export async function updateShopeeOrderStatuses(req, res) {
+  try {
+    const def_connection = await pools.leviosaPool.getConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
+
+    try {
+      const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
+      const [secretsResult] = await def_connection.query(querySecrets, [
+        secretId,
+      ]);
+
+      if (secretsResult.length <= 0) {
+        throw new Error("No secrets found.");
+      }
+
+      const secrets = secretsResult[0];
+
+      const selectQuery = `
+      SELECT *
+      FROM Orders_Shopee 
+      WHERE ORDER_STATUS NOT IN ('COMPLETED', 'CANCELLED', 'RTS')
+      AND CREATED_DATE <= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
+      ORDER BY CREATED_DATE ASC 
+      LIMIT 30;
+    `;
+
+      const [orders] = await inv_connection.query(selectQuery);
+
+      if (orders.length === 0) {
+        return res
+          .status(200)
+          .json({ ok: true, message: "No orders to update found." });
+      }
+
+      let startDate = moment();
+      let endDate = moment(0);
+
+      for (const order of orders) {
+        const createdDate = moment(order.CREATED_DATE);
+
+        if (createdDate.isBefore(startDate)) {
+          startDate = createdDate;
+        }
+
+        if (createdDate.isAfter(endDate)) {
+          endDate = createdDate;
+        }
+      }
+
+      const startTimeUnix = startDate.unix();
+      const endTimeUnix = endDate.unix();
+
+      let shopeeOrdersFetch = await getShopeeOrderList(
+        secrets,
+        startTimeUnix,
+        endTimeUnix,
+        "COMPLETED"
+      );
+
+      if (!shopeeOrdersFetch.ok) {
+        console.log(shopeeOrdersFetch);
+        throw new Error(
+          "There was an error while getting the Shopee Orders. Please try again"
+        );
+      }
+
+      let shopeeOrdersResult = shopeeOrdersFetch.data.response.order_list;
+
+      while (shopeeOrdersFetch.data.response.more) {
+        shopeeOrdersFetch = await getShopeeOrderList(
+          secrets,
+          startTimeUnix,
+          endTimeUnix,
+          "COMPLETED",
+          shopeeOrdersFetch.data.response.next_cursor
+        );
+
+        if (!shopeeOrdersFetch.ok) {
+          break;
+        }
+
+        const result = shopeeOrdersFetch.data.response.order_list;
+
+        if (result.length === 0) {
+          break;
+        }
+
+        shopeeOrdersResult = [...shopeeOrdersResult, ...result];
+      }
+
+      if (shopeeOrdersResult.length <= 0) {
+        return res.status(200).json({ ok: true, message: "No orders found." });
+      }
+
+      const orderIdsCsv = shopeeOrdersResult
+        .map((order) => `'${order.order_sn}'`)
+        .join(", ");
+
+      const updateProductQuery = `
+        UPDATE Orders_Shopee
+            SET ORDER_STATUS = CASE ORDER_ID
+                ${shopeeOrdersResult
+                  .map(
+                    (order) =>
+                      `WHEN '${order.order_sn}' THEN '${order.order_status}'`
+                  )
+                  .join(" ")}
+            END
+        WHERE ORDER_ID IN (${orderIdsCsv});`;
+
+      const [query] = await inv_connection.query(updateProductQuery);
+
+      if (query.changedRows === 0) {
+        return res.status(200).json({
+          ok: true,
+          message: "No orders were updated",
+          length: shopeeOrdersResult.length,
+          updated: query.changedRows,
+        });
+      } else {
+        return res.status(200).json({
+          ok: true,
+          message: "Order statuses updated!",
+          length: shopeeOrdersResult.length,
+          updated: query.changedRows,
+        });
+      }
     } finally {
       def_connection.release();
       inv_connection.release();

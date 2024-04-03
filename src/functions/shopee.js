@@ -68,16 +68,30 @@ export async function getShopeeOrders(secrets, orderIds) {
   return shopeeGetAPIRequest(secrets, path, params);
 }
 
-export async function getShopeeOrderList(secrets, start_time, end_time) {
+export async function getShopeeOrderList(
+  secrets,
+  start_time,
+  end_time,
+  order_status,
+  cursor
+) {
   const path = "/api/v2/order/get_order_list";
 
-  const params = {
+  let params = {
     time_range_field: "create_time",
     time_from: start_time,
     time_to: end_time,
     page_size: 100,
-    order_status: "READY_TO_SHIP",
+    response_optional_fields: "order_status",
   };
+
+  if (order_status) {
+    params.order_status = order_status;
+  }
+
+  if (cursor) {
+    params.cursor = cursor;
+  }
 
   return shopeeGetAPIRequest(secrets, path, params);
 }

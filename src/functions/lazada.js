@@ -36,12 +36,22 @@ export async function getMultipleLazOrders(secrets, orderIds) {
   return lazadaGetAPIRequest(secrets, path, params);
 }
 
-export async function getLazadaOrderList(secrets, start_time, end_time) {
+export async function getLazadaOrderList(
+  secrets,
+  start_time,
+  end_time,
+  order_status
+) {
   const path = "/orders/get";
   const params = {
     created_before: end_time,
     created_after: start_time,
-    status: "pending",
+    sort_by: "created_at",
+    sort_direction: "ASC",
   };
+
+  if (order_status) {
+    params.status = order_status;
+  }
   return lazadaGetAPIRequest(secrets, path, params);
 }
