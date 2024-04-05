@@ -14,7 +14,6 @@ app.use(express.json());
 // "/api"
 app.use("/api", routes);
 
-// Turn on that server!
 app.listen(PORT, () => {
   console.log(`App listening on port ${PORT}`);
 });
