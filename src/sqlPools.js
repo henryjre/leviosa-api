@@ -1,10 +1,21 @@
 import mysql from "mysql2/promise";
 
+const environment = process.env.node_env;
+
+let caCertificate;
+if (environment === "prod") {
+  const fs = require("fs");
+  const path = require("path");
+  const caCertificatePath = path.join(__dirname, "../cert/DO_Certificate.crt");
+  caCertificate = fs.readFileSync(caCertificatePath);
+} else if (environment === "dev") {
+  caCertificate = process.env.db_cert;
+}
+
 const dbHost = process.env.db_host;
 const dbPort = process.env.db_port;
 const dbUsername = process.env.db_username;
 const dbPassword = process.env.db_password;
-const caCertificate = process.env.db_cert;
 
 function createPool(database) {
   return mysql.createPool({
