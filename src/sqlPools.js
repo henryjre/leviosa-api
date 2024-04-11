@@ -25,7 +25,7 @@ const commonPoolConfig = {
   user: dbUsername,
   password: dbPassword,
   waitForConnections: true,
-  connectionLimit: 10,
+  connectionLimit: 4,
   queueLimit: 0,
   ssl: {
     ca: caCertificate,
