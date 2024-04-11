@@ -1,4 +1,4 @@
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 import {
   getLazadaProductsInfo,
   getUpdateLazadaProductStock,
@@ -18,8 +18,8 @@ export async function changeShopeeInventory(type) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       let selectQuery;
@@ -150,8 +150,8 @@ export async function changeShopeeInventory(type) {
         }
       }
     } finally {
-      def_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -164,8 +164,8 @@ export async function changeLazadaInventory(type) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       let selectQuery;
@@ -293,8 +293,8 @@ export async function changeLazadaInventory(type) {
         }
       }
     } finally {
-      def_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -307,8 +307,8 @@ export async function changeTiktokInventory(type) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       let selectQuery;
@@ -456,8 +456,8 @@ export async function changeTiktokInventory(type) {
         }
       }
     } finally {
-      def_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -466,7 +466,7 @@ export async function changeTiktokInventory(type) {
 
 export async function onAddInventory(data) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens";
@@ -484,7 +484,7 @@ export async function onAddInventory(data) {
       console.log(lazadaResult);
       console.log(tiktokResult);
     } finally {
-      def_connection.release();
+      await def_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -709,7 +709,7 @@ async function changeTiktokStock(secrets, data, type) {
 
 export async function setProductQuantity(data) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens";
@@ -761,7 +761,7 @@ export async function setProductQuantity(data) {
         success: successData,
       };
     } finally {
-      def_connection.release();
+      await def_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

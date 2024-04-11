@@ -5,7 +5,7 @@ import * as refresh from "./refresh_secrets.js";
 import * as discord from "./discord_order_notifications.js";
 import * as settlement from "./order_settlements.js";
 
-// "/api/v1/jobs/sample"
+// "/api/v1/jobs/ping"
 jobs.get("/ping", refresh.pingMySQL);
 // "/api/v1/jobs/refreshShopeeTokens"
 jobs.get("/refreshShopeeTokens", refresh.refreshShopeeToken);

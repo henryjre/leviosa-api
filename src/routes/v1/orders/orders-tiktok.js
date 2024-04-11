@@ -3,15 +3,15 @@ import {
   queryProductsPlacement,
 } from "../../../functions/inventory.js";
 import { getTiktokOrderList } from "../../../functions/tiktok.js";
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 import moment from "moment-timezone";
 
 const secretId = process.env.tiktok_secrets_id;
 
 export async function getPendingTiktokOrders(req, res) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
       const [secretsResult] = await def_connection.query(querySecrets, [
@@ -148,8 +148,8 @@ export async function getPendingTiktokOrders(req, res) {
         .status(200)
         .json({ ok: true, message: "All orders were recorded!" });
     } finally {
-      def_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(`Error in function getPendingTiktokOrders: ${error.message}`);
@@ -160,8 +160,8 @@ export async function getPendingTiktokOrders(req, res) {
 
 export async function updateTiktokOrderStatuses(req, res) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -269,8 +269,8 @@ export async function updateTiktokOrderStatuses(req, res) {
         });
       }
     } finally {
-      def_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(`Error in function getPendingTiktokOrders: ${error.message}`);

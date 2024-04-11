@@ -1,7 +1,7 @@
 import crypto from "crypto";
 import moment from "moment-timezone";
 
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 import {
   decrementInventory,
   incrementInventoryAndCost,
@@ -20,8 +20,8 @@ export async function catchWebhook(req, res) {
     // const auth = req.headers.authorization;
     const secretId = process.env.lazada_secrets_id;
 
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -57,8 +57,8 @@ export async function catchWebhook(req, res) {
           return res.status(200).json({ ok: true, message: "success" });
       }
     } finally {
-      def_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.error(error.toString());

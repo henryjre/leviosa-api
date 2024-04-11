@@ -1,5 +1,5 @@
 import * as deduction from "../jobs/retail_stock_change.js";
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 
 export async function deductRetailInventory(req, res) {
   const { platform } = req.query;
@@ -64,7 +64,7 @@ export async function soldOutRetailStock(req, res) {
 
 export async function syncInventories(req, res) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
 
     try {
       const selectQuery = `SELECT JSON_OBJECT('sku', SKU, 'quantity', TOTAL_QUANTITY) AS result FROM Leviosa_Inventory`;
@@ -76,7 +76,7 @@ export async function syncInventories(req, res) {
 
       return res.status(200).json(inventorySetResult);
     } finally {
-      def_connection.release();
+      await def_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

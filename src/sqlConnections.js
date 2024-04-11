@@ -24,30 +24,34 @@ const commonPoolConfig = {
   port: dbPort,
   user: dbUsername,
   password: dbPassword,
-  waitForConnections: true,
-  connectionLimit: 4,
-  queueLimit: 0,
   ssl: {
     ca: caCertificate,
     rejectUnauthorized: true,
   },
 };
 
-const managementPool = mysql.createPool({
-  ...commonPoolConfig,
-  database: "management",
-});
+const managementConnection = async () =>
+  await mysql.createConnection({
+    ...commonPoolConfig,
+    database: "management",
+  });
 
-const leviosaPool = mysql.createPool({
-  ...commonPoolConfig,
-  database: "defaultdb",
-});
+const leviosaConnection = async () =>
+  await mysql.createConnection({
+    ...commonPoolConfig,
+    database: "defaultdb",
+  });
 
-const inventoryPool = mysql.createPool({
-  ...commonPoolConfig,
-  database: "inventory",
-});
+const inventoryConnection = async () =>
+  await mysql.createConnection({
+    ...commonPoolConfig,
+    database: "inventory",
+  });
 
-const pools = { managementPool, leviosaPool, inventoryPool };
+const conn = {
+  managementConnection,
+  leviosaConnection,
+  inventoryConnection,
+};
 
-export default pools;
+export default conn;

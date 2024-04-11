@@ -2,7 +2,7 @@ import crypto from "crypto";
 import moment from "moment-timezone";
 import fetch from "node-fetch";
 
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 import {
   queryProductsPlacement,
   queryProductsCancel,
@@ -16,9 +16,9 @@ export async function catchWebhook(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
-    const mgmt_connection = await pools.managementPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const inv_connection = await conn.inventoryConnection();
+    const mgmt_connection = await conn.managementConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -58,9 +58,9 @@ export async function catchWebhook(req, res) {
           return res.status(200).json({ ok: true, message: "success" });
       }
     } finally {
-      def_connection.release();
-      inv_connection.release();
-      mgmt_connection.release();
+      await def_connection.end();
+      await inv_connection.end();
+      await mgmt_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

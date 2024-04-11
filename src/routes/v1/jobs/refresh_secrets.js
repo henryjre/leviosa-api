@@ -1,5 +1,5 @@
 import crypto from "crypto";
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 
 export {
   pingMySQL,
@@ -15,9 +15,9 @@ async function sampleJob(req, res) {
 
 async function pingMySQL(req, res) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
-    const mgmt_connection = await pools.leviosaPool.getConnection();
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
+    const mgmt_connection = await conn.managementConnection();
+    const inv_connection = await conn.inventoryConnection();
     try {
       await def_connection.ping();
       await mgmt_connection.ping();
@@ -25,9 +25,9 @@ async function pingMySQL(req, res) {
 
       return res.status(200).send("🟢 All SQL servers are reachable.");
     } finally {
-      def_connection.release();
-      mgmt_connection.release();
-      inv_connection.release();
+      await def_connection.end();
+      await mgmt_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.error("Error pinging MySQL server:", error.message);
@@ -41,7 +41,7 @@ async function refreshShopeeToken(req, res) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const connection = await pools.leviosaPool.getConnection();
+    const connection = await conn.leviosaConnection();
 
     try {
       const queryShopee = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -105,7 +105,7 @@ async function refreshShopeeToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      connection.release();
+      await connection.end();
     }
   } catch (error) {
     console.log("SHOPEE SECRETS ERROR", error);
@@ -127,7 +127,7 @@ async function refreshTiktokToken(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const connection = await pools.leviosaPool.getConnection();
+    const connection = await conn.leviosaConnection();
 
     try {
       const queryTiktok = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -169,7 +169,7 @@ async function refreshTiktokToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      connection.release();
+      await connection.end();
     }
   } catch (error) {
     console.log("TIKTOK SECRETS ERROR", error);
@@ -183,7 +183,7 @@ async function refreshLazadaToken(req, res) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
-    const connection = await pools.leviosaPool.getConnection();
+    const connection = await conn.leviosaConnection();
 
     try {
       const queryLazada = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -236,7 +236,7 @@ async function refreshLazadaToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      connection.release();
+      await connection.end();
     }
   } catch (error) {
     console.log("LAZADA SECRETS ERROR", error);

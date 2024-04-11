@@ -1,5 +1,5 @@
 import moment from "moment-timezone";
-import pools from "../../../sqlPools.js";
+import conn from "../../../sqlConnections.js";
 
 export async function getInventoryProductOrders(req, res) {
   const { start_date, end_date, platform, status } = req.query;
@@ -43,7 +43,7 @@ export async function getInventoryProductOrders(req, res) {
         throw new Error("Invalid status");
     }
 
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       let queryResult;
@@ -86,7 +86,7 @@ export async function getInventoryProductOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      inv_connection.release();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -127,7 +127,7 @@ export async function getRetailOrders(req, res) {
         throw new Error("Invalid platform");
     }
 
-    const inv_connection = await pools.inventoryPool.getConnection();
+    const inv_connection = await conn.inventoryConnection();
 
     try {
       let queryResult;
@@ -186,7 +186,7 @@ export async function getRetailOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      inv_connection.release();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -198,7 +198,7 @@ export async function getRetailOrders(req, res) {
 
 export async function getMainInventory(req, res) {
   try {
-    const def_connection = await pools.leviosaPool.getConnection();
+    const def_connection = await conn.leviosaConnection();
     try {
       const queryString = `SELECT 
                 SINGLE_LISTING, 
@@ -233,7 +233,7 @@ export async function getMainInventory(req, res) {
 
       return res.status(200).json({ ok: true, message: "success", data: rows });
     } finally {
-      def_connection.release();
+      await def_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
