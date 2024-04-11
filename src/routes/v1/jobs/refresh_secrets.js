@@ -2,7 +2,7 @@ import crypto from "crypto";
 import pools from "../../../sqlPools.js";
 
 export {
-  sampleJob,
+  pingMySQL,
   refreshShopeeToken,
   refreshLazadaToken,
   refreshTiktokToken,
@@ -11,6 +11,28 @@ export {
 async function sampleJob(req, res) {
   console.log("sample job running");
   return res.status(200).json({ ok: true, message: "success" });
+}
+
+async function pingMySQL(req, res) {
+  try {
+    const def_connection = await pools.leviosaPool.getConnection();
+    const mgmt_connection = await pools.leviosaPool.getConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
+    try {
+      await def_connection.ping();
+      await mgmt_connection.ping();
+      await inv_connection.ping();
+
+      return res.status(200).send("🟢 All SQL servers are reachable.");
+    } finally {
+      def_connection.release();
+      mgmt_connection.release();
+      inv_connection.release();
+    }
+  } catch (error) {
+    console.error("Error pinging MySQL server:", error.message);
+    return res.status(200).send("🔴 SQL servers unreachable.");
+  }
 }
 
 async function refreshShopeeToken(req, res) {
