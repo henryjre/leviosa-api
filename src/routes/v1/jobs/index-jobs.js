@@ -7,6 +7,8 @@ import * as settlement from "./order_settlements.js";
 
 // "/api/v1/jobs/ping"
 jobs.get("/ping", refresh.pingMySQL);
+// "/api/v1/jobs/refreshConnections"
+jobs.get("/refreshConnections", refresh.refreshConnections);
 // "/api/v1/jobs/refreshShopeeTokens"
 jobs.get("/refreshShopeeTokens", refresh.refreshShopeeToken);
 // "/api/v1/jobs/refreshLazadaTokens"
