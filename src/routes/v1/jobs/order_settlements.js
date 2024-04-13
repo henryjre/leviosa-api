@@ -541,10 +541,14 @@ async function checkForShopeeSettlements(req, res) {
 
         const settlement = settlementFetch.data.response.order_income;
 
+        const settlementAmount =
+          settlement.escrow_amount_after_adjustment === undefined
+            ? settlement.escrow_amount
+            : settlement.escrow_amount_after_adjustment;
+
         const totalSubtotal = Number(settlement.cost_of_goods_sold);
-        const totalSettlement = Number(
-          settlement.escrow_amount_after_adjustment
-        );
+        const totalSettlement = Number(settlementAmount);
+
         const totalFees = totalSubtotal - totalSettlement;
 
         toSettleOrders.push({
