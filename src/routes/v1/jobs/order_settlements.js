@@ -347,23 +347,23 @@ async function checkForLazadaSettlements(req, res) {
       const selectOrders = `SELECT * FROM Orders_Lazada WHERE ORDER_STATUS = 'delivered' AND SETTLED = 0 ORDER BY CREATED_DATE ASC LIMIT 10`;
       const [settledOrders] = await inv_connection.query(selectOrders);
 
-      if (!settledOrders.length) {
+      if (settledOrders.length === 0) {
         console.log("No Lazada orders to settle. Ending job...");
         return res.status(200).json({ ok: true, message: "success" });
       }
 
-      let startDate = moment(0);
-      let endDate = moment();
+      let startDate = moment();
+      let endDate = moment(0);
 
       for (const order of settledOrders) {
         const createdDate = moment(order.CREATED_DATE).subtract(2, "days");
         const deliveredDate = moment(order.CREATED_DATE).add(14, "days");
 
-        if (deliveredDate.isBefore(endDate)) {
+        if (deliveredDate.isAfter(endDate)) {
           endDate = deliveredDate;
         }
 
-        if (createdDate.isAfter(startDate)) {
+        if (createdDate.isBefore(startDate)) {
           startDate = createdDate;
         }
       }
@@ -382,7 +382,7 @@ async function checkForLazadaSettlements(req, res) {
 
       const secrets = secretsResult[0];
 
-      const settlementFetch = await queryOrderSettlements(
+      let settlementFetch = await queryOrderSettlements(
         secrets,
         startTime,
         endTime
@@ -395,10 +395,34 @@ async function checkForLazadaSettlements(req, res) {
         );
       }
 
-      const settlements = settlementFetch.data.data;
+      let settlements = settlementFetch.data.data;
 
       if (!settlements.length) {
-        throw new Error("No Lazada orders to settle. Ending job...");
+        console.log("No Lazada orders to settle. Ending job...");
+        return res.status(200).json({ ok: true, message: "success" });
+      }
+
+      let offset = settlements.length;
+      while (settlementFetch.data.data.length === 500) {
+        settlementFetch = await queryOrderSettlements(
+          secrets,
+          startTime,
+          endTime,
+          offset
+        );
+
+        if (!settlementFetch.ok) {
+          console.log(settlementFetch);
+          break;
+        }
+
+        if (!settlementFetch.data.data.length) {
+          console.log(settlementFetch.data.data.length);
+          break;
+        }
+
+        settlements = [...settlements, ...settlementFetch.data.data];
+        offset = settlements.length;
       }
 
       const paidSettlements = settlements.filter(
@@ -421,7 +445,6 @@ async function checkForLazadaSettlements(req, res) {
           if (s_order.fee_name === "Item Price Credit") {
             const cleanedAmount = s_order.amount.replace(/,/g, "");
             const amount = Number(Math.abs(cleanedAmount));
-            console.log(amount);
             sum += isNaN(amount) ? 0 : amount;
           }
           return sum;
@@ -491,9 +514,14 @@ async function checkForLazadaSettlements(req, res) {
   }
 }
 
-async function queryOrderSettlements(secrets, startTime, endTime) {
+async function queryOrderSettlements(secrets, startTime, endTime, offset) {
   const path = "/finance/transaction/details/get";
   const params = { start_time: startTime, end_time: endTime };
+
+  if (offset) {
+    params.offset = offset;
+  }
+
   return lazadaGetAPIRequest(secrets, path, params);
 }
 
