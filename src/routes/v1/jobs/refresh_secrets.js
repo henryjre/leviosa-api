@@ -1,5 +1,6 @@
 import crypto from "crypto";
 import conn from "../../../sqlConnections.js";
+import moment from "moment";
 
 export {
   pingMySQL,
@@ -69,7 +70,10 @@ async function pingMySQL(req, res) {
       await mgmt_connection.ping();
       await inv_connection.ping();
 
-      return res.status(200).send("🟢 All SQL servers are reachable.");
+      return res.status(200).json({
+        message: "🟢 All SQL servers are reachable.",
+        time: moment().format("MMMM DD, YYYY [at] h:mm A"),
+      });
     } finally {
       await def_connection.end();
       await mgmt_connection.end();
