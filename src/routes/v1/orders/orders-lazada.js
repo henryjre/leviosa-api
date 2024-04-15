@@ -169,8 +169,8 @@ export async function getPendingLazadaOrders(req, res) {
         .status(200)
         .json({ ok: true, message: "All orders were recorded!" });
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(`Error in function getPendingLazadaOrders: ${error.message}`);
@@ -292,8 +292,8 @@ export async function updateLazadaOrderStatuses(req, res) {
         });
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(`Error in function getPendingLazadaOrders: ${error.message}`);

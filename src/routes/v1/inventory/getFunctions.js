@@ -86,7 +86,7 @@ export async function getInventoryProductOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.end();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -186,7 +186,7 @@ export async function getRetailOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.end();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -233,7 +233,102 @@ export async function getMainInventory(req, res) {
 
       return res.status(200).json({ ok: true, message: "success", data: rows });
     } finally {
-      await def_connection.end();
+      await def_connection.destroy();
+    }
+  } catch (error) {
+    console.log(error.toString());
+    return res
+      .status(404)
+      .json({ ok: false, message: error.message, data: [] });
+  }
+}
+
+export async function getJournalEntries(req, res) {
+  const { start_date, end_date } = req.query;
+
+  try {
+    if (!start_date || !end_date || !platform) {
+      throw new Error("Invalid parameters");
+    }
+
+    if (
+      ![
+        "PENDING IN",
+        "PENDING OUT",
+        "COMPLETED IN",
+        "COMPLETED OUT",
+        "CANCELLED",
+      ].includes(status)
+    ) {
+      throw new Error("Invalid status");
+    }
+
+    let table;
+    switch (status) {
+      case "PENDING IN":
+        table = "Pending_Inventory_In";
+        break;
+      case "PENDING OUT":
+        table = "Pending_Inventory_Out";
+        break;
+      case "COMPLETED IN":
+        table = "Completed_Inventory_In";
+        break;
+      case "COMPLETED OUT":
+        table = "Completed_Inventory_Out";
+        break;
+      case "CANCELLED":
+        table = "Cancelled_Inventory_Out";
+        break;
+
+      default:
+        throw new Error("Invalid status");
+    }
+
+    const inv_connection = await conn.inventoryConnection();
+
+    try {
+      let queryResult;
+      if (platform !== "ALL") {
+        const selectQuery = `SELECT * FROM ${table} WHERE ORDER_CREATED BETWEEN ? AND ? AND PLATFORM = ? ORDER BY ORDER_CREATED ASC;`;
+        queryResult = await inv_connection.query(selectQuery, [
+          start_date,
+          end_date,
+          platform,
+        ]);
+      } else if (platform === "ALL") {
+        const selectQuery = `SELECT * FROM ${table} WHERE ORDER_CREATED BETWEEN ? AND ? ORDER BY ORDER_CREATED ASC;`;
+        queryResult = await inv_connection.query(selectQuery, [
+          start_date,
+          end_date,
+        ]);
+      }
+
+      const selectResult = queryResult[0];
+
+      if (!selectResult.length) {
+        return res.status(200).json({ ok: true, message: "success", data: [] });
+      } else {
+        const filteredResult = selectResult.map((obj) => {
+          delete obj.ID;
+          delete obj.SHOPEE;
+          delete obj.LAZADA;
+          delete obj.TIKTOK;
+
+          obj.ORDER_CREATED = moment(obj.ORDER_CREATED).format(
+            "MMMM DD, YYYY h:mm A"
+          );
+          obj.PRODUCT_COGS = Number(obj.PRODUCT_COGS);
+
+          return obj;
+        });
+
+        return res
+          .status(200)
+          .json({ ok: true, message: "success", data: filteredResult });
+      }
+    } finally {
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());

@@ -46,7 +46,7 @@ async function refreshConnections(req, res) {
         fail_count: terminated.fail,
       });
     } finally {
-      await def_connection.end();
+      await def_connection.destroy();
     }
   } catch (error) {
     console.error("Error in terminating connection:", error.stack);
@@ -75,9 +75,9 @@ async function pingMySQL(req, res) {
         time: moment().format("MMMM DD, YYYY [at] h:mm A"),
       });
     } finally {
-      await def_connection.end();
-      await mgmt_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await mgmt_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.error("Error pinging MySQL server:", error.message);
@@ -155,7 +155,7 @@ async function refreshShopeeToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      await connection.end();
+      await connection.destroy();
     }
   } catch (error) {
     console.log("SHOPEE SECRETS ERROR", error);
@@ -219,7 +219,7 @@ async function refreshTiktokToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      await connection.end();
+      await connection.destroy();
     }
   } catch (error) {
     console.log("TIKTOK SECRETS ERROR", error);
@@ -286,7 +286,7 @@ async function refreshLazadaToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      await connection.end();
+      await connection.destroy();
     }
   } catch (error) {
     console.log("LAZADA SECRETS ERROR", error);

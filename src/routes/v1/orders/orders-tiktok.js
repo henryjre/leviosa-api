@@ -148,8 +148,8 @@ export async function getPendingTiktokOrders(req, res) {
         .status(200)
         .json({ ok: true, message: "All orders were recorded!" });
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(`Error in function getPendingTiktokOrders: ${error.message}`);
@@ -269,8 +269,8 @@ export async function updateTiktokOrderStatuses(req, res) {
         });
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(`Error in function getPendingTiktokOrders: ${error.message}`);

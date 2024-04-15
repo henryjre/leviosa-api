@@ -69,8 +69,8 @@ export async function addShopeeInventory() {
         productsToDeduct[index].updatedStock = stockToDeduct;
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());

@@ -150,8 +150,8 @@ export async function changeShopeeInventory(type) {
         }
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -293,8 +293,8 @@ export async function changeLazadaInventory(type) {
         }
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -456,8 +456,8 @@ export async function changeTiktokInventory(type) {
         }
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      await def_connection.destroy();
+      await inv_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -484,7 +484,7 @@ export async function onAddInventory(data) {
       console.log(lazadaResult);
       console.log(tiktokResult);
     } finally {
-      await def_connection.end();
+      await def_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -761,7 +761,7 @@ export async function setProductQuantity(data) {
         success: successData,
       };
     } finally {
-      await def_connection.end();
+      await def_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
