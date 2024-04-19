@@ -11,7 +11,7 @@ export async function getExecutiveTasks(req, res) {
     const mgmt_connections = await conn.managementConnection();
 
     try {
-      const selectQuery = `SELECT * FROM Executive_Tasks WHERE EXECUTIVE_ID = ?;`;
+      const selectQuery = `SELECT * FROM Executive_Tasks WHERE EXECUTIVE_ID = ? ORDER BY TIME_RENDERED DESC;`;
       const queryResult = await mgmt_connections.query(selectQuery, [
         executive_id,
       ]);
