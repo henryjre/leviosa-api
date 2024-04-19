@@ -26,11 +26,9 @@ export async function getExecutiveTasks(req, res) {
           const totalHours = Math.floor(totalHoursRendered / 60);
           const totalMinutes = totalHoursRendered % 60;
 
-          const totalRenderedTime = `**\`⏱️ ${totalHours} ${
+          const totalRenderedTime = `\`⏱️ ${totalHours} ${
             totalHours === 1 ? "hour" : "hours"
-          } and ${totalMinutes} ${
-            totalMinutes === 1 ? "minute" : "minutes"
-          }\`**`;
+          } and ${totalMinutes} ${totalMinutes === 1 ? "minute" : "minutes"}\``;
 
           obj.TOTAL_TIME = totalRenderedTime;
 
