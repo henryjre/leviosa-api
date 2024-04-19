@@ -6,6 +6,7 @@ import webhooks from "./webhooks/index-webhook.js";
 import inventory from "./inventory/index-inventory.js";
 import orders from "./orders/index-orders.js";
 import jobs from "./jobs/index-jobs.js";
+import management from "./management/index-management.js";
 
 v1.get("/webhooks", (req, res) => {
   return res
@@ -24,5 +25,8 @@ v1.use("/jobs", jobs);
 
 // "/api/v1/inventory"
 v1.use("/inventory", authenticate, inventory);
+
+// "/api/v1/management"
+v1.use("/management", authenticate, management);
 
 export default v1;
