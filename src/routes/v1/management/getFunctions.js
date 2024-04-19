@@ -21,9 +21,25 @@ export async function getExecutiveTasks(req, res) {
       if (!selectResult.length) {
         return res.status(200).json({ ok: true, message: "success", data: [] });
       } else {
+        const filteredResult = selectResult.map((obj) => {
+          const totalHoursRendered = obj.TIME_RENDERED;
+          const totalHours = Math.floor(totalHoursRendered / 60);
+          const totalMinutes = totalHoursRendered % 60;
+
+          const totalRenderedTime = `**\`⏱️ ${totalHours} ${
+            totalHours === 1 ? "hour" : "hours"
+          } and ${totalMinutes} ${
+            totalMinutes === 1 ? "minute" : "minutes"
+          }\`**`;
+
+          obj.TOTAL_TIME = totalRenderedTime;
+
+          return obj;
+        });
+
         return res
           .status(200)
-          .json({ ok: true, message: "success", data: selectResult });
+          .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
       await mgmt_connections.destroy();
