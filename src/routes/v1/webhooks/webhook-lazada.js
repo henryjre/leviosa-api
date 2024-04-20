@@ -170,7 +170,7 @@ async function orderStatusChange(
 
     console.log(`Pending Lazada order #${orderId} recorded!`);
     return res.status(200).json({ ok: true, message: "success" });
-  } else if (["canceled", "shipped_back"].includes(status)) {
+  } else if (["canceled", "shipped_back_success"].includes(status)) {
     const selectOrderQuery = "SELECT * FROM Orders_Lazada WHERE ORDER_ID = ?";
     const [order] = await inv_connection.query(selectOrderQuery, [orderId]);
 
@@ -226,56 +226,60 @@ async function orderStatusChange(
       orderId,
     ]);
 
+    let table;
     if (status === "canceled") {
-      const selectQuery =
-        "SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
-      const [products] = await inv_connection.query(selectQuery, [orderId]);
+      table = "Pending_Inventory_Out";
+    } else {
+      table = "Completed_Inventory_Out";
+    }
 
-      if (products.length > 0) {
-        const skuArray = [];
-        for (const item of orderFetch.data.data) {
-          const itemIndex = skuArray.findIndex((i) => i.sku === item.sku);
-          if (itemIndex === -1) {
-            const product = products.find((p) => p.PRODUCT_SKU === item.sku);
+    const selectQuery = `SELECT * FROM ${table} WHERE ORDER_ID = ?`;
+    const [products] = await inv_connection.query(selectQuery, [orderId]);
 
-            if (!product) continue;
-            skuArray.push({
-              sku: item.sku,
-              name: product.PRODUCT_NAME,
-              quantity: 1,
-              cost: product.PRODUCT_COGS,
-            });
-          } else {
-            skuArray[itemIndex].quantity += 1;
-          }
-        }
+    if (products.length > 0) {
+      const skuArray = [];
+      for (const item of orderFetch.data.data) {
+        const itemIndex = skuArray.findIndex((i) => i.sku === item.sku);
+        if (itemIndex === -1) {
+          const product = products.find((p) => p.PRODUCT_SKU === item.sku);
 
-        const lineItems = await queryProductsCancel(def_connection, skuArray);
-
-        const toUpdate = [];
-        for (const product of skuArray) {
-          const item = lineItems.products.find((i) => i.sku === product.sku);
-
-          const totalProductCost =
-            Number(product.quantity) * Number(product.cost) +
-            Number(item.quantity) * Number(item.cost);
-          const totalProductQuantity =
-            Number(product.quantity) + Number(item.quantity);
-
-          const totalNewCost = parseFloat(
-            (totalProductCost / totalProductQuantity).toFixed(2)
-          );
-
-          toUpdate.push({
-            sku: product.sku,
-            name: product.name,
-            quantity: product.quantity,
-            newCost: totalNewCost,
+          if (!product) continue;
+          skuArray.push({
+            sku: item.sku,
+            name: product.PRODUCT_NAME,
+            quantity: 1,
+            cost: product.PRODUCT_COGS,
           });
+        } else {
+          skuArray[itemIndex].quantity += 1;
         }
-
-        await incrementInventoryAndCost(def_connection, toUpdate);
       }
+
+      const lineItems = await queryProductsCancel(def_connection, skuArray);
+
+      const toUpdate = [];
+      for (const product of skuArray) {
+        const item = lineItems.products.find((i) => i.sku === product.sku);
+
+        const totalProductCost =
+          Number(product.quantity) * Number(product.cost) +
+          Number(item.quantity) * Number(item.cost);
+        const totalProductQuantity =
+          Number(product.quantity) + Number(item.quantity);
+
+        const totalNewCost = parseFloat(
+          (totalProductCost / totalProductQuantity).toFixed(2)
+        );
+
+        toUpdate.push({
+          sku: product.sku,
+          name: product.name,
+          quantity: product.quantity,
+          newCost: totalNewCost,
+        });
+      }
+
+      await incrementInventoryAndCost(def_connection, toUpdate);
     }
 
     await inv_connection.query(deleteOrdersQuery, [orderId]);

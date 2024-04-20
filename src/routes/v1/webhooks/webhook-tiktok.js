@@ -224,61 +224,63 @@ async function orderStatusChange(
       orderId,
     ]);
 
+    let table;
     if (cancelStatus === "CANCELLED") {
-      const selectQuery =
-        "SELECT * FROM Pending_Inventory_Out WHERE ORDER_ID = ?";
-      const [products] = await inv_connection.query(selectQuery, [orderId]);
+      table = "Pending_Inventory_Out";
+    } else {
+      table = "Completed_Inventory_Out";
+    }
 
-      if (products.length > 0) {
-        const skuArray = [];
-        for (const item of orderData.line_items) {
-          const itemIndex = skuArray.findIndex(
-            (i) => i.sku === item.seller_sku
+    const selectQuery = `SELECT * FROM ${table} WHERE ORDER_ID = ?`;
+    const [products] = await inv_connection.query(selectQuery, [orderId]);
+
+    if (products.length > 0) {
+      const skuArray = [];
+      for (const item of orderData.line_items) {
+        const itemIndex = skuArray.findIndex((i) => i.sku === item.seller_sku);
+
+        if (itemIndex === -1) {
+          const product = products.find(
+            (p) => p.PRODUCT_SKU === item.seller_sku
           );
 
-          if (itemIndex === -1) {
-            const product = products.find(
-              (p) => p.PRODUCT_SKU === item.seller_sku
-            );
-
-            if (!product) continue;
-            skuArray.push({
-              sku: item.seller_sku,
-              name: product.PRODUCT_NAME,
-              quantity: 1,
-              cost: product.PRODUCT_COGS,
-            });
-          } else {
-            skuArray[itemIndex].quantity += 1;
-          }
-        }
-
-        const lineItems = await queryProductsCancel(def_connection, skuArray);
-
-        const toUpdate = [];
-        for (const product of skuArray) {
-          const item = lineItems.products.find((i) => i.sku === product.sku);
-
-          const totalProductCost =
-            Number(product.quantity) * Number(product.cost) +
-            Number(item.quantity) * Number(item.cost);
-          const totalProductQuantity =
-            Number(product.quantity) + Number(item.quantity);
-
-          const totalNewCost = parseFloat(
-            (totalProductCost / totalProductQuantity).toFixed(2)
-          );
-
-          toUpdate.push({
-            sku: product.sku,
-            name: product.name,
-            quantity: product.quantity,
-            newCost: totalNewCost,
+          if (!product) continue;
+          skuArray.push({
+            sku: item.seller_sku,
+            name: product.PRODUCT_NAME,
+            quantity: 1,
+            cost: product.PRODUCT_COGS,
           });
+        } else {
+          skuArray[itemIndex].quantity += 1;
         }
-
-        await incrementInventoryAndCost(def_connection, toUpdate);
       }
+
+      const lineItems = await queryProductsCancel(def_connection, skuArray);
+
+      const toUpdate = [];
+      for (const product of skuArray) {
+        const item = lineItems.products.find((i) => i.sku === product.sku);
+
+        const totalProductCost =
+          Number(product.quantity) * Number(product.cost) +
+          Number(item.quantity) * Number(item.cost);
+        const totalProductQuantity =
+          Number(product.quantity) + Number(item.quantity);
+
+        const totalNewCost = parseFloat(
+          (totalProductCost / totalProductQuantity).toFixed(2)
+        );
+
+        toUpdate.push({
+          sku: product.sku,
+          name: product.name,
+          quantity: product.quantity,
+          newCost: totalNewCost,
+        });
+      }
+
+      await incrementInventoryAndCost(def_connection, toUpdate);
     }
 
     await inv_connection.query(deleteOrdersQuery, [orderId]);
