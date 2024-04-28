@@ -8,16 +8,16 @@ export async function getExecutiveTasks(req, res) {
       throw new Error("Invalid parameters");
     }
 
-    const mgmt_connections = await conn.managementConnection();
+    const mgmt_connection = await conn.managementConnection();
 
     try {
       const selectQuery = `SELECT * FROM Executive_Tasks WHERE EXECUTIVE_ID = ? ORDER BY TIME_RENDERED DESC;`;
-      const queryResult = await mgmt_connections.query(selectQuery, [
+      const queryResult = await mgmt_connection.query(selectQuery, [
         executive_id,
       ]);
 
       const selectExecutive = `SELECT * FROM Executives WHERE MEMBER_ID = ?;`;
-      const [executiveResult] = await mgmt_connections.query(selectExecutive, [
+      const [executiveResult] = await mgmt_connection.query(selectExecutive, [
         executive_id,
       ]);
 
@@ -53,7 +53,7 @@ export async function getExecutiveTasks(req, res) {
         });
       }
     } finally {
-      await mgmt_connections.destroy();
+      await mgmt_connection.destroy();
     }
   } catch (error) {
     console.log(error.toString());
@@ -71,5 +71,41 @@ export async function getExecutiveTasks(req, res) {
     } and ${totalMinutes} ${totalMinutes === 1 ? "minute" : "minutes"}`;
 
     return formattedTime;
+  }
+}
+
+export async function getVotingRights(req, res) {
+  const { board_id } = req.query;
+
+  try {
+    if (!board_id) {
+      throw new Error("Invalid parameters");
+    }
+
+    const mgmt_connection = await conn.managementConnection();
+
+    try {
+      const selectQuery = `SELECT * FROM Board_Of_Directors WHERE MEMBER_ID = ?;`;
+      const [bod] = await mgmt_connection.query(selectQuery, [board_id]);
+
+      if (!bod.length) {
+        return res
+          .status(200)
+          .json({ ok: true, message: "success", voting_rights: null });
+      } else {
+        return res.status(200).json({
+          ok: true,
+          message: "success",
+          voting_rights: bod[0].VOTING_RIGHTS,
+        });
+      }
+    } finally {
+      await mgmt_connection.destroy();
+    }
+  } catch (error) {
+    console.log(error.toString());
+    return res
+      .status(404)
+      .json({ ok: false, message: error.message, voting_rights: null });
   }
 }
