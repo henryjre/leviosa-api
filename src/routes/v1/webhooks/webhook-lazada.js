@@ -57,8 +57,8 @@ export async function catchWebhook(req, res) {
           return res.status(200).json({ ok: true, message: "success" });
       }
     } finally {
-      await def_connection.destroy();
-      await inv_connection.destroy();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.error(error.toString());

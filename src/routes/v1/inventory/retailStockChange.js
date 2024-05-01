@@ -76,7 +76,7 @@ export async function syncInventories(req, res) {
 
       return res.status(200).json(inventorySetResult);
     } finally {
-      await def_connection.destroy();
+      await def_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

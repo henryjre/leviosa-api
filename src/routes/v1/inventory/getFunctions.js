@@ -86,7 +86,7 @@ export async function getInventoryProductOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.destroy();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -186,7 +186,7 @@ export async function getRetailOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.destroy();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -233,7 +233,7 @@ export async function getMainInventory(req, res) {
 
       return res.status(200).json({ ok: true, message: "success", data: rows });
     } finally {
-      await def_connection.destroy();
+      await def_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -328,7 +328,7 @@ export async function getJournalEntries(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.destroy();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

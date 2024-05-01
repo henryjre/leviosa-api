@@ -53,7 +53,7 @@ export async function getExecutiveTasks(req, res) {
         });
       }
     } finally {
-      await mgmt_connection.destroy();
+      await mgmt_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -100,7 +100,7 @@ export async function getVotingRights(req, res) {
         });
       }
     } finally {
-      await mgmt_connection.destroy();
+      await mgmt_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

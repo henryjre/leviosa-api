@@ -91,7 +91,7 @@ async function shopeeOrderNotif() {
 `;
       await inv_connection.query(updateQuery);
     } finally {
-      await inv_connection.destroy();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -168,7 +168,7 @@ async function lazadaOrderNotif() {
 `;
       await inv_connection.query(updateQuery);
     } finally {
-      await inv_connection.destroy();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -253,7 +253,7 @@ async function tiktokOrderNotif() {
 `;
       await inv_connection.query(updateQuery);
     } finally {
-      await inv_connection.destroy();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());

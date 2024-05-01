@@ -135,8 +135,8 @@ async function checkForTiktokSettlements(req, res) {
       //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
       //   await inv_connection.query(inserSettlement, valuesToInsert);
     } finally {
-      await def_connection.destroy();
-      await inv_connection.destroy();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -297,8 +297,8 @@ async function checkTiktokOrderSettlements(req, res) {
       //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
       //   await inv_connection.query(inserSettlement, valuesToInsert);
     } finally {
-      await def_connection.destroy();
-      await inv_connection.destroy();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -505,8 +505,8 @@ async function checkForLazadaSettlements(req, res) {
       console.log("LAZADA ORDERS WERE SETTLED");
       return res.status(200).json({ ok: true, message: "success" });
     } finally {
-      await def_connection.destroy();
-      await inv_connection.destroy();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
@@ -621,8 +621,8 @@ async function checkForShopeeSettlements(req, res) {
       console.log("SHOPEE ORDERS WERE SETTLED");
       return res.status(200).json({ ok: true, message: "success" });
     } finally {
-      await def_connection.destroy();
-      await inv_connection.destroy();
+      await def_connection.end();
+      await inv_connection.end();
     }
   } catch (error) {
     console.log(error.toString());
