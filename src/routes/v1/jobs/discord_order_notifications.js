@@ -40,7 +40,7 @@ async function shopeeOrderNotif() {
 
       const secrets = secretsResult[0];
 
-      const selectOrdersQuery = `SELECT * FROM Orders_Shopee WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
+      const selectOrdersQuery = `SELECT * FROM Orders_Shopee WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 3`;
       const [shopeeOrdersDb] = await inv_connection.query(selectOrdersQuery);
 
       if (shopeeOrdersDb.length === 0) {
@@ -117,7 +117,7 @@ async function lazadaOrderNotif() {
 
       const secrets = secretsResult[0];
 
-      const selectOrdersQuery = `SELECT * FROM Orders_Lazada WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
+      const selectOrdersQuery = `SELECT * FROM Orders_Lazada WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 3`;
       const [lazOrdersDb] = await inv_connection.query(selectOrdersQuery);
 
       if (lazOrdersDb.length === 0) {
@@ -194,7 +194,7 @@ async function tiktokOrderNotif() {
 
       const secrets = secretsResult[0];
 
-      const selectOrdersQuery = `SELECT * FROM Orders_Tiktok WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 10`;
+      const selectOrdersQuery = `SELECT * FROM Orders_Tiktok WHERE DISCORD_CHANNEL IS NULL ORDER BY CREATED_DATE ASC LIMIT 3`;
       const [tiktokOrdersDb] = await inv_connection.query(selectOrdersQuery);
 
       if (tiktokOrdersDb.length === 0) {
