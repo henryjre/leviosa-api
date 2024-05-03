@@ -267,7 +267,7 @@ async function orderStatusChange(
 
     let table;
     if (cancelStatus === "CANCELLED") {
-      table = "Pending_Inventory_Out";
+      table = "Cancelled_Inventory_Out";
     } else {
       table = "Completed_Inventory_Out";
     }
