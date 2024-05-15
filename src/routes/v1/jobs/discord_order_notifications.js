@@ -2,7 +2,8 @@ import { botApiPostCall } from "../../../functions/api_request_functions.js";
 import { getMultipleLazOrders } from "../../../functions/lazada.js";
 import { getShopeeOrders } from "../../../functions/shopee.js";
 import { getTiktokOrdersDetails } from "../../../functions/tiktok.js";
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 
 const path = "/api/notifications/orders/createOrderThread";
 
@@ -25,8 +26,10 @@ async function shopeeOrderNotif() {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -91,7 +94,10 @@ async function shopeeOrderNotif() {
 `;
       await inv_connection.query(updateQuery);
     } finally {
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -102,8 +108,10 @@ async function lazadaOrderNotif() {
   const secretId = process.env.lazada_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -168,7 +176,10 @@ async function lazadaOrderNotif() {
 `;
       await inv_connection.query(updateQuery);
     } finally {
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -179,8 +190,10 @@ async function tiktokOrderNotif() {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -253,7 +266,10 @@ async function tiktokOrderNotif() {
 `;
       await inv_connection.query(updateQuery);
     } finally {
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());

@@ -1,4 +1,5 @@
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools";
 
 export async function getExecutiveTasks(req, res) {
   const { executive_id } = req.query;
@@ -8,7 +9,8 @@ export async function getExecutiveTasks(req, res) {
       throw new Error("Invalid parameters");
     }
 
-    const mgmt_connection = await conn.managementConnection();
+    // const mgmt_connection = await conn.managementConnection();
+    const mgmt_connection = await pools.managementPool.getConnection();
 
     try {
       const selectQuery = `SELECT * FROM Executive_Tasks WHERE EXECUTIVE_ID = ? ORDER BY TIME_RENDERED DESC;`;
@@ -53,7 +55,8 @@ export async function getExecutiveTasks(req, res) {
         });
       }
     } finally {
-      await mgmt_connection.end();
+      // await mgmt_connection.end();
+      mgmt_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -82,7 +85,8 @@ export async function getVotingRights(req, res) {
       throw new Error("Invalid parameters");
     }
 
-    const mgmt_connection = await conn.managementConnection();
+    // const mgmt_connection = await conn.managementConnection();
+    const mgmt_connection = await pools.managementPool.getConnection();
 
     try {
       const selectQuery = `SELECT * FROM Board_Of_Directors WHERE MEMBER_ID = ?;`;
@@ -100,7 +104,8 @@ export async function getVotingRights(req, res) {
         });
       }
     } finally {
-      await mgmt_connection.end();
+      // await mgmt_connection.end();
+      mgmt_connection.release();
     }
   } catch (error) {
     console.log(error.toString());

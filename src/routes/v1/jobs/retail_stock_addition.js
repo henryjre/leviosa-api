@@ -1,12 +1,15 @@
 import { searchShopeeProduct } from "../../../functions/shopee.js";
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 
 export async function addShopeeInventory() {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const selectQuery = `
@@ -69,8 +72,10 @@ export async function addShopeeInventory() {
         productsToDeduct[index].updatedStock = stockToDeduct;
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());

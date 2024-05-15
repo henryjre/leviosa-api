@@ -1,5 +1,6 @@
 import crypto from "crypto";
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 import moment from "moment";
 
 export {
@@ -12,7 +13,8 @@ export {
 
 async function refreshConnections(req, res) {
   try {
-    const def_connection = await conn.leviosaConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
     try {
       const sqlQuery = "SHOW PROCESSLIST";
 
@@ -46,7 +48,8 @@ async function refreshConnections(req, res) {
         fail_count: terminated.fail,
       });
     } finally {
-      await def_connection.end();
+      // await def_connection.end();
+      def_connection.release();
     }
   } catch (error) {
     console.error("Error in terminating connection:", error.stack);
@@ -62,9 +65,13 @@ async function refreshConnections(req, res) {
 
 async function pingMySQL(req, res) {
   try {
-    const def_connection = await conn.leviosaConnection();
-    const mgmt_connection = await conn.managementConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const mgmt_connection = await conn.managementConnection();
+    const mgmt_connection = await pools.managementPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
+
     try {
       await def_connection.ping();
       await mgmt_connection.ping();
@@ -75,9 +82,12 @@ async function pingMySQL(req, res) {
         time: moment().format("MMMM DD, YYYY [at] h:mm A"),
       });
     } finally {
-      await def_connection.end();
-      await mgmt_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await mgmt_connection.end();
+      mgmt_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.error("Error pinging MySQL server:", error.message);
@@ -91,7 +101,8 @@ async function refreshShopeeToken(req, res) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const connection = await conn.leviosaConnection();
+    // const connection = await conn.leviosaConnection();
+    const connection = await pools.leviosaPool.getConnection();
 
     try {
       const queryShopee = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -155,7 +166,8 @@ async function refreshShopeeToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      await connection.end();
+      // await connection.end();
+      connection.release();
     }
   } catch (error) {
     console.log("SHOPEE SECRETS ERROR", error);
@@ -177,7 +189,8 @@ async function refreshTiktokToken(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const connection = await conn.leviosaConnection();
+    // const connection = await conn.leviosaConnection();
+    const connection = await pools.leviosaPool.getConnection();
 
     try {
       const queryTiktok = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -219,7 +232,8 @@ async function refreshTiktokToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      await connection.end();
+      // await connection.end();
+      connection.release();
     }
   } catch (error) {
     console.log("TIKTOK SECRETS ERROR", error);
@@ -233,7 +247,8 @@ async function refreshLazadaToken(req, res) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
-    const connection = await conn.leviosaConnection();
+    // const connection = await conn.leviosaConnection();
+    const connection = await pools.leviosaPool.getConnection();
 
     try {
       const queryLazada = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -286,7 +301,8 @@ async function refreshLazadaToken(req, res) {
         return res.status(400).json({ ok: false, message: "fail" });
       }
     } finally {
-      await connection.end();
+      // await connection.end();
+      connection.release();
     }
   } catch (error) {
     console.log("LAZADA SECRETS ERROR", error);

@@ -1,5 +1,6 @@
 import moment from "moment-timezone";
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 
 export async function getInventoryProductOrders(req, res) {
   const { start_date, end_date, platform, status } = req.query;
@@ -43,7 +44,8 @@ export async function getInventoryProductOrders(req, res) {
         throw new Error("Invalid status");
     }
 
-    const inv_connection = await conn.inventoryConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       let queryResult;
@@ -86,7 +88,8 @@ export async function getInventoryProductOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.end();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -127,7 +130,8 @@ export async function getRetailOrders(req, res) {
         throw new Error("Invalid platform");
     }
 
-    const inv_connection = await conn.inventoryConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       let queryResult;
@@ -186,7 +190,8 @@ export async function getRetailOrders(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.end();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -198,7 +203,8 @@ export async function getRetailOrders(req, res) {
 
 export async function getMainInventory(req, res) {
   try {
-    const def_connection = await conn.leviosaConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
     try {
       const queryString = `SELECT 
                 SINGLE_LISTING, 
@@ -229,11 +235,12 @@ export async function getMainInventory(req, res) {
             ORDER BY 
                 PRODUCT_NAME ASC;
 `;
-      const [rows] = await def_connection.execute(queryString);
+      const [rows] = await def_connection.query(queryString);
 
       return res.status(200).json({ ok: true, message: "success", data: rows });
     } finally {
-      await def_connection.end();
+      // await def_connection.end();
+      def_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -285,7 +292,8 @@ export async function getJournalEntries(req, res) {
         throw new Error("Invalid status");
     }
 
-    const inv_connection = await conn.inventoryConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       let queryResult;
@@ -328,7 +336,8 @@ export async function getJournalEntries(req, res) {
           .json({ ok: true, message: "success", data: filteredResult });
       }
     } finally {
-      await inv_connection.end();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());

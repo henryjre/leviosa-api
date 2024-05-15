@@ -6,15 +6,18 @@ import {
   getShopeeOrderList,
   getShopeeOrders,
 } from "../../../functions/shopee.js";
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 import moment from "moment-timezone";
 
 const secretId = process.env.shopee_secrets_id;
 
 export async function getPendingShopeeOrders(req, res) {
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
       const [secretsResult] = await def_connection.query(querySecrets, [
@@ -169,8 +172,10 @@ export async function getPendingShopeeOrders(req, res) {
         .status(200)
         .json({ ok: true, message: "All orders were recorded!" });
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(`Error in function getPendingShopeeOrders: ${error.message}`);
@@ -181,8 +186,10 @@ export async function getPendingShopeeOrders(req, res) {
 
 export async function updateShopeeOrderStatuses(req, res) {
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -307,8 +314,10 @@ export async function updateShopeeOrderStatuses(req, res) {
         });
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(`Error in function getPendingShopeeOrders: ${error.message}`);

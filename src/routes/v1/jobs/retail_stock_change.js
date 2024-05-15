@@ -1,4 +1,5 @@
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 import {
   getLazadaProductsInfo,
   getUpdateLazadaProductStock,
@@ -18,8 +19,10 @@ export async function changeShopeeInventory(type) {
   const secretId = process.env.shopee_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       let selectQuery;
@@ -150,8 +153,10 @@ export async function changeShopeeInventory(type) {
         }
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -164,8 +169,10 @@ export async function changeLazadaInventory(type) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       let selectQuery;
@@ -293,8 +300,10 @@ export async function changeLazadaInventory(type) {
         }
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -307,8 +316,10 @@ export async function changeTiktokInventory(type) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       let selectQuery;
@@ -456,8 +467,10 @@ export async function changeTiktokInventory(type) {
         }
       }
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -466,7 +479,8 @@ export async function changeTiktokInventory(type) {
 
 export async function onAddInventory(data) {
   try {
-    const def_connection = await conn.leviosaConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens";
@@ -484,7 +498,8 @@ export async function onAddInventory(data) {
       console.log(lazadaResult);
       console.log(tiktokResult);
     } finally {
-      await def_connection.end();
+      // await def_connection.end();
+      def_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -709,7 +724,8 @@ async function changeTiktokStock(secrets, data, type) {
 
 export async function setProductQuantity(data) {
   try {
-    const def_connection = await conn.leviosaConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens";
@@ -761,7 +777,8 @@ export async function setProductQuantity(data) {
         success: successData,
       };
     } finally {
-      await def_connection.end();
+      // await def_connection.end();
+      def_connection.release();
     }
   } catch (error) {
     console.log(error.toString());

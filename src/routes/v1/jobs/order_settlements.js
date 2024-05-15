@@ -5,7 +5,8 @@ import {
   shopeeGetAPIRequest,
   tiktokGetAPIRequest,
 } from "../../../functions/api_request_functions.js";
-import conn from "../../../sqlConnections.js";
+// import conn from "../../../sqlConnections.js";
+import pools from "../../../sqlPools.js";
 
 export {
   checkForLazadaSettlements,
@@ -19,8 +20,10 @@ async function checkForTiktokSettlements(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -135,8 +138,10 @@ async function checkForTiktokSettlements(req, res) {
       //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
       //   await inv_connection.query(inserSettlement, valuesToInsert);
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -148,8 +153,10 @@ async function checkTiktokOrderSettlements(req, res) {
   const secretId = process.env.tiktok_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -297,8 +304,10 @@ async function checkTiktokOrderSettlements(req, res) {
       //   const inserSettlement = `INSERT IGNORE INTO Statements_Tiktok (STATEMENT_ID, PAYMENT_ID, REVENUE, SETTLEMENT_AMOUNT, SETTLEMENT_FEES, STATEMENT_TIME) VALUES (?, ?, ?, ?, ?, ?)`;
       //   await inv_connection.query(inserSettlement, valuesToInsert);
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -340,8 +349,10 @@ async function checkForLazadaSettlements(req, res) {
   const secretId = process.env.lazada_secrets_id;
 
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const selectOrders = `SELECT * FROM Orders_Lazada WHERE ORDER_STATUS = 'delivered' AND SETTLED = 0 ORDER BY CREATED_DATE ASC LIMIT 10`;
@@ -505,8 +516,10 @@ async function checkForLazadaSettlements(req, res) {
       console.log("LAZADA ORDERS WERE SETTLED");
       return res.status(200).json({ ok: true, message: "success" });
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
@@ -531,8 +544,10 @@ async function queryOrderSettlements(secrets, startTime, endTime, offset) {
 async function checkForShopeeSettlements(req, res) {
   const secretId = process.env.shopee_secrets_id;
   try {
-    const def_connection = await conn.leviosaConnection();
-    const inv_connection = await conn.inventoryConnection();
+    // const def_connection = await conn.leviosaConnection();
+    const def_connection = await pools.leviosaPool.getConnection();
+    // const inv_connection = await conn.inventoryConnection();
+    const inv_connection = await pools.inventoryPool.getConnection();
 
     try {
       const querySecrets = "SELECT * FROM Shop_Tokens WHERE ID = ?";
@@ -621,8 +636,10 @@ async function checkForShopeeSettlements(req, res) {
       console.log("SHOPEE ORDERS WERE SETTLED");
       return res.status(200).json({ ok: true, message: "success" });
     } finally {
-      await def_connection.end();
-      await inv_connection.end();
+      // await def_connection.end();
+      def_connection.release();
+      // await inv_connection.end();
+      inv_connection.release();
     }
   } catch (error) {
     console.log(error.toString());
