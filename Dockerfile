@@ -1,8 +1,8 @@
 FROM node:19.2.0
 
-WORKDIR /app/src
+WORKDIR /app
 
-COPY . /app/src
+COPY . /app
 
 RUN npm ci
 
