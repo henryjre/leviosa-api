@@ -1,5 +1,5 @@
 // import conn from "../../../sqlConnections.js";
-import pools from "../../../sqlPools";
+import pools from "../../../sqlPools.js";
 
 export async function getExecutiveTasks(req, res) {
   const { executive_id } = req.query;
