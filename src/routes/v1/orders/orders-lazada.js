@@ -179,7 +179,7 @@ export async function getPendingLazadaOrders(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function getPendingLazadaOrders: ${error.message}\n\nFull details:\n${error}`
+      `Error in function getPendingLazadaOrders: ${error.message}\nError Stack:\n${error.stack}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });
@@ -308,7 +308,7 @@ export async function updateLazadaOrderStatuses(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function updateLazadaOrderStatuses: ${error.message}\n\nFull details:\n${error}`
+      `Error in function updateLazadaOrderStatuses: ${error.message}\nError Stack:\n${error.stack}`
     );
     return res.status(400).json({ ok: false, message: error.message });
   }

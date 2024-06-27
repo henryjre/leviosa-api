@@ -49,6 +49,7 @@ export async function getPendingShopeeOrders(req, res) {
       );
 
       if (!shopeeOrdersFetch.ok) {
+        console.log(shopeeOrdersFetch);
         throw new Error(
           "There was an error while getting the Shopee Orders. Please try again"
         );
@@ -179,7 +180,7 @@ export async function getPendingShopeeOrders(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function getPendingShopeeOrders: ${error.message}\n\nFull details:\n${error}`
+      `Error in function getPendingShopeeOrders: ${error.message}\nError Stack:\n${error.stack}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });
@@ -323,7 +324,7 @@ export async function updateShopeeOrderStatuses(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function updateShopeeOrderStatuses: ${error.message}\n\nFull details:\n${error}`
+      `Error in function updateShopeeOrderStatuses: ${error.message}\nError Stack:\n${error.stack}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });

@@ -158,7 +158,7 @@ export async function getPendingTiktokOrders(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function getPendingTiktokOrders: ${error.message}\n\nFull details:\n${error}`
+      `Error in function getPendingTiktokOrders: ${error.message}\nError Stack:\n${error.stack}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });
@@ -285,7 +285,7 @@ export async function updateTiktokOrderStatuses(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function updateTiktokOrderStatuses: ${error.message}\n\nFull details:\n${error}`
+      `Error in function updateTiktokOrderStatuses: ${error.message}\nError Stack:\n${error.stack}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });
