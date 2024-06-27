@@ -2,6 +2,7 @@
 import express from "express";
 import helmet from "helmet";
 import "dotenv/config";
+import "./functions/cron.js";
 
 const app = express();
 const PORT = process.env.PORT || 8080;
