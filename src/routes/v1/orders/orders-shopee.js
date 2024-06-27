@@ -178,7 +178,9 @@ export async function getPendingShopeeOrders(req, res) {
       inv_connection.release();
     }
   } catch (error) {
-    console.log(`Error in function getPendingShopeeOrders: ${error.message}`);
+    console.log(
+      `Error in function getPendingShopeeOrders: ${error.message}\n\nFull details:\n${error.stack}`
+    );
 
     return res.status(400).json({ ok: false, message: error.message });
   }
@@ -320,7 +322,9 @@ export async function updateShopeeOrderStatuses(req, res) {
       inv_connection.release();
     }
   } catch (error) {
-    console.log(`Error in function getPendingShopeeOrders: ${error.message}`);
+    console.log(
+      `Error in function updateShopeeOrderStatuses: ${error.message}\n\nFull details:\n${error.stack}`
+    );
 
     return res.status(400).json({ ok: false, message: error.message });
   }
