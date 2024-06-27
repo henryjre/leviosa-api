@@ -157,7 +157,9 @@ export async function getPendingTiktokOrders(req, res) {
       inv_connection.release();
     }
   } catch (error) {
-    console.log(`Error in function getPendingTiktokOrders: ${error.message}`);
+    console.log(
+      `Error in function getPendingTiktokOrders: ${error.message}\n\nFull details:\n${error}`
+    );
 
     return res.status(400).json({ ok: false, message: error.message });
   }
@@ -282,7 +284,9 @@ export async function updateTiktokOrderStatuses(req, res) {
       inv_connection.release();
     }
   } catch (error) {
-    console.log(`Error in function getPendingTiktokOrders: ${error.message}`);
+    console.log(
+      `Error in function updateTiktokOrderStatuses: ${error.message}\n\nFull details:\n${error}`
+    );
 
     return res.status(400).json({ ok: false, message: error.message });
   }

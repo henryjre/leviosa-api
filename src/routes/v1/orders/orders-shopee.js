@@ -179,7 +179,7 @@ export async function getPendingShopeeOrders(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function getPendingShopeeOrders: ${error.message}\n\nFull details:\n${error.stack}`
+      `Error in function getPendingShopeeOrders: ${error.message}\n\nFull details:\n${error}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });
@@ -323,7 +323,7 @@ export async function updateShopeeOrderStatuses(req, res) {
     }
   } catch (error) {
     console.log(
-      `Error in function updateShopeeOrderStatuses: ${error.message}\n\nFull details:\n${error.stack}`
+      `Error in function updateShopeeOrderStatuses: ${error.message}\n\nFull details:\n${error}`
     );
 
     return res.status(400).json({ ok: false, message: error.message });

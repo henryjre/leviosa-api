@@ -178,7 +178,9 @@ export async function getPendingLazadaOrders(req, res) {
       inv_connection.release();
     }
   } catch (error) {
-    console.log(`Error in function getPendingLazadaOrders: ${error.message}`);
+    console.log(
+      `Error in function getPendingLazadaOrders: ${error.message}\n\nFull details:\n${error}`
+    );
 
     return res.status(400).json({ ok: false, message: error.message });
   }
@@ -305,7 +307,9 @@ export async function updateLazadaOrderStatuses(req, res) {
       inv_connection.release();
     }
   } catch (error) {
-    console.log(`Error in function getPendingLazadaOrders: ${error.message}`);
+    console.log(
+      `Error in function updateLazadaOrderStatuses: ${error.message}\n\nFull details:\n${error}`
+    );
     return res.status(400).json({ ok: false, message: error.message });
   }
 }
