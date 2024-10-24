@@ -20,15 +20,15 @@ function createCronJob(cronTime, endpoint) {
   );
 }
 
-createCronJob("30 */3 * * *", "/api/v1/jobs/refreshShopeeTokens"); //refreshing shopee tokens
-createCronJob("0 0 */5 * * *", "/api/v1/jobs/refreshTiktokTokens"); //refreshing tiktok tokens
-createCronJob("0 0 */29 * * *", "/api/v1/jobs/refreshLazadaTokens"); //refreshing lazada tokens
+// createCronJob("30 */3 * * *", "/api/v1/jobs/refreshShopeeTokens"); //refreshing shopee tokens
+// createCronJob("0 0 */5 * * *", "/api/v1/jobs/refreshTiktokTokens"); //refreshing tiktok tokens
+// createCronJob("0 0 */29 * * *", "/api/v1/jobs/refreshLazadaTokens"); //refreshing lazada tokens
 
-createCronJob("10 */4 * * *", "/api/v1/jobs/settleShopee"); //settle shopee orders
-createCronJob("20 */4 * * *", "/api/v1/jobs/settleLazada"); //settle lazada orders
-createCronJob("0 0 * * *", "/api/v1/jobs/settleTiktokOrders"); //settle tiktok orders
+// createCronJob("10 */4 * * *", "/api/v1/jobs/settleShopee"); //settle shopee orders
+// createCronJob("20 */4 * * *", "/api/v1/jobs/settleLazada"); //settle lazada orders
+// createCronJob("0 0 * * *", "/api/v1/jobs/settleTiktokOrders"); //settle tiktok orders
 
-createCronJob("*/15 * * * *", "/api/v1/jobs/runDiscordNotif"); //running discord notifications
+// createCronJob("*/15 * * * *", "/api/v1/jobs/runDiscordNotif"); //running discord notifications
 // createCronJob("0 */2 * * *", "/api/v1/jobs/refreshConnections"); //refreshing mysql connections
 
 async function getRequest(endpoint) {

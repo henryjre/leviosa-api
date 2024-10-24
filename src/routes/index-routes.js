@@ -1,5 +1,7 @@
 import { Router } from "express";
+
 import v1 from "./v1/index-v1.js";
+import odooRouter from "./odoo/index-odoo.js";
 
 const routes = Router();
 
@@ -18,5 +20,8 @@ routes.post("/echo", (req, res) => {
 
 // "/api/v1"
 routes.use("/v1", v1);
+
+// "/api/odoo"
+routes.use("/odoo", odooRouter);
 
 export default routes;
