@@ -1,6 +1,8 @@
 // Bring in our dependencies
 import express from "express";
 import helmet from "helmet";
+import cors from "cors";
+
 import "dotenv/config";
 import "./functions/cron.js";
 
@@ -11,6 +13,7 @@ import routes from "./routes/index-routes.js";
 
 app.use(helmet());
 app.use(express.json());
+app.use(cors());
 
 // "/api"
 app.use("/api", routes);
