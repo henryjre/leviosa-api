@@ -3,24 +3,24 @@ import { odooLogin, jsonRpc } from "../../../functions/odoo_rpc.js";
 const dbName = process.env.odoo_db;
 const password = process.env.odoo_password;
 
-export async function getLoyaltyCardData(req, res) {
-  const { partner_id } = req.query;
+export async function getLoyaltyRewards(req, res) {
+  // const { category } = req.body;
 
   try {
-    if (!partner_id) {
-      throw new Error("no_barcode_found");
-    }
+    // if (!category) {
+    //   throw new Error("No product category specified");
+    // }
 
     // const uid = await odooLogin();
 
     const params = {
-      model: "loyalty.card",
+      model: "loyalty.reward",
       method: "search_read",
       domain: [
-        ["partner_id", "=", partner_id],
+        ["program_id", "in", ["Reward Card"]],
         // ["company_id", "in", [branch.cid]],
       ],
-      fields: ["points"],
+      fields: ["description", "required_points", "discount", "discount_mode"], //discount mode: per_order, per_point, percent
       offset: null,
       limit: null,
       //   order: "date asc",
@@ -48,7 +48,7 @@ export async function getLoyaltyCardData(req, res) {
     }
 
     if (!request.result.length) {
-      throw new Error("invalid_barcode");
+      throw new Error("no_data_found");
     }
 
     return res
