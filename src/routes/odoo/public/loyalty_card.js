@@ -18,6 +18,7 @@ export async function getLoyaltyCardData(req, res) {
       method: "search_read",
       domain: [
         ["partner_id", "=", partner_id],
+        ["program_id", "=", "Reward Card"],
         // ["company_id", "in", [branch.cid]],
       ],
       fields: ["points"],
@@ -48,7 +49,7 @@ export async function getLoyaltyCardData(req, res) {
     }
 
     if (!request.result.length) {
-      throw new Error("invalid_barcode");
+      throw new Error("no_data_found");
     }
 
     return res
