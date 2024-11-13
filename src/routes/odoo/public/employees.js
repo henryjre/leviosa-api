@@ -1,4 +1,5 @@
 import { odooLogin, jsonRpc } from "../../../functions/odoo_rpc.js";
+import moment from "moment-timezone";
 
 const dbName = process.env.odoo_db;
 const password = process.env.odoo_password;
@@ -71,11 +72,9 @@ export async function getAverageTransactionValue(req, res) {
 }
 
 function getStartAndEndOfDay(date) {
-  let startOfDay = new Date(date);
-  startOfDay.setHours(0, 0, 0, 0); // Set to 12:00:00 AM
-
-  let endOfDay = new Date(date);
-  endOfDay.setHours(23, 59, 59, 999); // Set to 11:59:59 PM
+  // Use moment to parse the input date and set the time zone to Philippine Time (Asia/Manila)
+  let startOfDay = moment(date).tz("Asia/Manila").startOf("day"); // Set to 12:00:00 AM
+  let endOfDay = moment(date).tz("Asia/Manila").endOf("day"); // Set to 11:59:59 PM
 
   return {
     start_date: startOfDay.toISOString(),
