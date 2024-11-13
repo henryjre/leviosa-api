@@ -86,21 +86,21 @@ function getStartAndEndOfDay(date) {
 function getTotalATVAmount(data) {
   return Object.values(
     data.reduce((acc, item) => {
-      const employeeId = item.employee_id[0]; // Use the unique employee ID for grouping
+      const employeeName = item.employee_id[1].split("-")[1].trim(); // Use the unique employee ID for grouping
 
       // Initialize the sum, count, and entries for the employee if it's encountered for the first time
-      if (!acc[employeeId]) {
-        acc[employeeId] = {
+      if (!acc[employeeName]) {
+        acc[employeeName] = {
           badge: item.employee_id[1].split("-")[0].trim(),
-          employee: item.employee_id[1].split("-")[1].trim(),
+          employee: employeeName,
           total_amount: 0,
           transaction_count: 0,
         };
       }
 
       // Add the amount_total to the employee's sum and increment the count
-      acc[employeeId].total_amount += item.amount_total;
-      acc[employeeId].transaction_count += 1;
+      acc[employeeName].total_amount += item.amount_total;
+      acc[employeeName].transaction_count += 1;
 
       return acc;
     }, {})
