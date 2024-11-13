@@ -3,11 +3,15 @@ const publicEndpoint = Router();
 
 import { getLoyaltyCardData } from "./loyalty_card.js";
 import { getLoyaltyRewards } from "./discount.js";
+import { getAverageTransactionValue } from "./employees.js";
 
 // "/api/odoo/public/getLoyaltyCardData"
 publicEndpoint.get("/getLoyaltyCardData", getLoyaltyCardData);
 
 // "/api/odoo/public/getLoyaltyCardData"
 publicEndpoint.get("/getLoyaltyRewards", getLoyaltyRewards);
+
+// "/api/odoo/public/getATV"
+publicEndpoint.post("/getATV", getAverageTransactionValue);
 
 export default publicEndpoint;
