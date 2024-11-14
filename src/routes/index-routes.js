@@ -19,7 +19,7 @@ routes.post("/echo", (req, res) => {
 });
 
 // "/api/v1"
-routes.use("/v1", v1);
+// routes.use("/v1", v1);
 
 // "/api/odoo"
 routes.use("/odoo", odooRouter);
