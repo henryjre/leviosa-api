@@ -212,6 +212,10 @@ function getStartAndEndOfDay(dateString) {
 function getTotalATVAmount(data) {
   return Object.values(
     data.reduce((acc, item) => {
+      if (!item.employee_id) {
+        return acc;
+      }
+
       const employeeName = item.employee_id[1].split("-")[1].trim(); // Use the unique employee ID for grouping
 
       // Initialize the sum, count, and entries for the employee if it's encountered for the first time
