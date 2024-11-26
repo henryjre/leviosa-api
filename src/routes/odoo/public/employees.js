@@ -4,6 +4,10 @@ import moment from "moment-timezone";
 const dbName = process.env.odoo_db;
 const password = process.env.odoo_password;
 
+//
+// GETTING ATV
+//
+
 export async function getAverageTransactionValue(req, res) {
   const { date } = req.body;
 
@@ -70,6 +74,10 @@ export async function getAverageTransactionValue(req, res) {
       .json({ ok: false, message: error.message, data: [] });
   }
 }
+
+//
+// GETTING DAILY SALES
+//
 
 export async function getOrderSalesJournal(req, res) {
   const { date } = req.body;
@@ -192,6 +200,104 @@ export async function getOrderSalesJournal(req, res) {
       console.error("Error:", error.message);
       return { ok: false, message: error.message, data: [] };
     }
+  }
+}
+
+//
+// GETTING EMPLOYEE SCHEDULE BASED ON DATE
+//
+
+export async function getAttendance(req, res) {
+  const { date } = req.body;
+
+  try {
+    if (!date) {
+      throw new Error("No date specified");
+    }
+
+    const { start_date, end_date } = getStartAndEndOfDay(date);
+
+    // const uid = await odooLogin();
+
+    const params = {
+      model: "hr.attendance",
+      method: "search_read",
+      domain: [
+        ["check_in", ">=", start_date],
+        ["check_out", "<=", end_date],
+        ["department_id", "!=", 6],
+      ],
+      fields: [
+        "employee_id",
+        "department_id",
+        "check_in",
+        "check_out",
+        "worked_hours",
+      ], //discount mode: per_order, per_point, percent
+      offset: null,
+      limit: null,
+      //   order: "date asc",
+    };
+
+    const request = await jsonRpc("call", {
+      service: "object",
+      method: "execute",
+      args: [
+        dbName,
+        2,
+        password,
+        params.model,
+        params.method,
+        params.domain,
+        params.fields,
+        params.offset,
+        params.limit,
+        // params.order,
+      ],
+    });
+
+    if (request.error) {
+      throw new Error("rpc_error");
+    }
+
+    if (!request.result.length) {
+      throw new Error("no_data_found");
+    }
+
+    const groupedData = request.result.reduce((acc, curr) => {
+      const departmentId = curr.department_id[0];
+      if (!acc[departmentId]) {
+        acc[departmentId] = {
+          department_name: curr.department_id[1],
+          employees: [],
+        };
+      }
+      // Format the dates
+      curr.check_in = moment(curr.check_in)
+        .tz("Asia/Manila")
+        .format("MMMM DD, YYYY h:mm A");
+      curr.check_out = moment(curr.check_out)
+        .tz("Asia/Manila")
+        .format("MMMM DD, YYYY h:mm A");
+
+      acc[departmentId].employees.push({
+        id: curr.id,
+        employee: curr.employee_id[1],
+        check_in: curr.check_in,
+        check_out: curr.check_out,
+        worked_hours: parseFloat(curr.worked_hours.toFixed(2)),
+      });
+      return acc;
+    }, {});
+
+    const result = Object.values(groupedData);
+
+    return res.status(200).json({ ok: true, message: "success", data: result });
+  } catch (error) {
+    console.error("Error:", error);
+    return res
+      .status(404)
+      .json({ ok: false, message: error.message, data: [] });
   }
 }
 
