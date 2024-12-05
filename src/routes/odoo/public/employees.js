@@ -110,11 +110,14 @@ export async function getOrderSalesJournal(req, res) {
       sessionData,
       sessionJournals.data
     );
+
     const fullTotalSession = calculateTotal(fullSessionCombined);
+
+    const aggregatedSessions = aggregateByCompany(fullTotalSession);
 
     return res
       .status(200)
-      .json({ ok: true, message: "success", data: fullTotalSession });
+      .json({ ok: true, message: "success", data: aggregatedSessions });
   } catch (error) {
     console.error("Error:", error.message);
     return res
@@ -128,8 +131,9 @@ export async function getOrderSalesJournal(req, res) {
         model: "pos.session",
         method: "search_read",
         domain: [
-          ["start_at", ">=", dateStart],
+          ["stop_at", ">=", dateStart],
           ["stop_at", "<=", dateEnd],
+          // ["stop_at", "<=", dateEnd],
           ["state", "=", "closed"],
           ["user_id", "=", 7],
         ],
@@ -388,4 +392,30 @@ const calculateTotal = (data) => {
       total_difference: totalDifference,
     };
   });
+};
+
+const aggregateByCompany = (data) => {
+  const aggregated = data.reduce(
+    (acc, { company_id, total_sales, total_deductibles }) => {
+      const [companyId, companyName] = company_id;
+      if (!acc[companyId]) {
+        acc[companyId] = {
+          company_id: company_id,
+          total_sales: 0,
+          total_deductibles: 0,
+          total_difference: 0,
+        };
+      }
+
+      acc[companyId].total_sales += total_sales;
+      acc[companyId].total_deductibles += total_deductibles;
+      acc[companyId].total_difference =
+        acc[companyId].total_sales - acc[companyId].total_deductibles;
+
+      return acc;
+    },
+    {}
+  );
+
+  return Object.values(aggregated);
 };
