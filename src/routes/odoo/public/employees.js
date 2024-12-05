@@ -131,6 +131,7 @@ export async function getOrderSalesJournal(req, res) {
           ["start_at", ">=", dateStart],
           ["stop_at", "<=", dateEnd],
           ["state", "=", "closed"],
+          ["user_id", "=", 7],
         ],
         fields: ["company_id", "display_name"],
       };
