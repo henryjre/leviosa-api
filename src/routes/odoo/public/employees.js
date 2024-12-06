@@ -396,7 +396,7 @@ const calculateTotal = (data) => {
 
 const aggregateByCompany = (data) => {
   const aggregated = data.reduce(
-    (acc, { company_id, total_sales, total_deductibles }) => {
+    (acc, { company_id, display_name, total_sales, total_deductibles }) => {
       const [companyId, companyName] = company_id;
       if (!acc[companyId]) {
         acc[companyId] = {
@@ -404,6 +404,7 @@ const aggregateByCompany = (data) => {
           total_sales: 0,
           total_deductibles: 0,
           total_difference: 0,
+          display_name: "",
         };
       }
 
@@ -411,6 +412,8 @@ const aggregateByCompany = (data) => {
       acc[companyId].total_deductibles += total_deductibles;
       acc[companyId].total_difference =
         acc[companyId].total_sales - acc[companyId].total_deductibles;
+      acc[companyId].display_name +=
+        (acc[companyId].display_name ? "\n" : "") + display_name;
 
       return acc;
     },
