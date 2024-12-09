@@ -228,7 +228,8 @@ export async function getAttendance(req, res) {
       model: "hr.attendance",
       method: "search_read",
       domain: [
-        ["check_in", ">=", start_date],
+        // ["check_in", ">=", start_date],
+        ["check_out", ">=", start_date],
         ["check_out", "<=", end_date],
         ["department_id", "!=", 6],
       ],
