@@ -131,8 +131,8 @@ export async function getOrderSalesJournal(req, res) {
         model: "pos.session",
         method: "search_read",
         domain: [
-          ["stop_at", ">=", dateStart],
-          ["stop_at", "<=", dateEnd],
+          ["start_at", ">=", dateStart],
+          ["start_at", "<=", dateEnd],
           // ["stop_at", "<=", dateEnd],
           ["state", "=", "closed"],
           ["user_id", "=", 7],
@@ -229,8 +229,8 @@ export async function getAttendance(req, res) {
       method: "search_read",
       domain: [
         // ["check_in", ">=", start_date],
-        ["check_out", ">=", start_date],
-        ["check_out", "<=", end_date],
+        ["check_in", ">=", start_date],
+        ["check_in", "<=", end_date],
         ["department_id", "!=", 6],
       ],
       fields: [

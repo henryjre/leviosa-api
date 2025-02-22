@@ -1,7 +1,7 @@
 import { CronJob } from "cron";
 import fetch from "node-fetch";
 
-const hostUrl = "https://seal-app-2toa6.ondigitalocean.app";
+const hostUrl = "https://seahorse-app-4ybu9.ondigitalocean.app";
 
 function createCronJob(cronTime, endpoint) {
   return new CronJob(
