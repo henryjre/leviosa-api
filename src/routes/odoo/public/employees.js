@@ -231,7 +231,7 @@ export async function getAttendance(req, res) {
         // ["check_in", ">=", start_date],
         ["check_in", ">=", start_date],
         ["check_in", "<=", end_date],
-        ["department_id", "!=", 6],
+        ["department_id", "in", [1, 4, 5, 7]],
       ],
       fields: [
         "employee_id",
